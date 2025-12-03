@@ -4,7 +4,7 @@ import { CHIP_UNIT } from "../constants";
 
 // Models to use
 const GEMINI_TEXT_MODEL = "gemini-2.0-flash";  // For text analysis/reports
-const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp-image-generation";  // For image generation (Nano Banana)
+const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp";  // For image generation (Native Image-to-Image)
 
 // Get Gemini API client with API key from environment variable
 const getClient = (): GoogleGenAI | null => {
@@ -317,20 +317,24 @@ export const generateWinnerPoster = async (
       const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
       const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
 
-      imagePrompt = `Edit this team photo to create a professional winner poster. Keep ALL people exactly as they are.
+      imagePrompt = `Transform this team photo into an epic Olympic-style victory celebration poster!
 
-EDITING INSTRUCTIONS:
-1. Keep every person's face, body, pose, and position EXACTLY the same - do not modify any person
-2. Only change the BACKGROUND to a clean gradient (light gray to white)
-3. Add professional studio lighting effect on the people
-4. Add slight vignette effect around edges
+Create a realistic photo of these team members celebrating like Olympic gold medalists:
+- Keep all the original team members' faces exactly as they are in the photo
+- Transform them into a victory celebration scene
+- Everyone wearing shiny gold medals around their necks
+- The team holding up a grand championship trophy together
+- Confetti and golden streamers falling in the background
+- Stadium or award ceremony setting with dramatic lighting
+- Expressions of pure joy and triumph
+- Realistic photographic style (not cartoon or illustration)
 
-TEXT TO ADD (in empty space only, never over people):
-- Top: "TEAM ${winner.colorIdx + 1}" in bold black modern font
-- Bottom: "PROJECT LEADERS" in large bold red text
-- Below that: "Total Asset: ${Math.abs(winner.score)} Billion" in smaller text
+Text overlay:
+- Top: "TEAM ${winner.colorIdx + 1} CHAMPIONS" in bold golden metallic text
+- Bottom: "STRATEGIC POSITIONING MASTERS" in elegant white text
+- Score: "${Math.abs(winner.score)} BILLION" displayed prominently
 
-IMPORTANT: Do NOT alter, replace, or regenerate any person's face. The people must remain 100% identical to the input photo.`;
+Style: Realistic, cinematic, celebratory, like an official Olympic victory photo`;
 
       contents = [
         {
@@ -343,27 +347,24 @@ IMPORTANT: Do NOT alter, replace, or regenerate any person's face. The people mu
       ];
     } else {
       // No team photo provided - generate without reference
-      imagePrompt = `Create a professional winner poster in Silicon Valley HBO style without specific people.
+      imagePrompt = `Create an epic Olympic-style victory celebration poster!
 
 Design requirements:
-- Clean gradient background (light gray to white)
-- Abstract silhouettes of a winning team in professional attire
-- Clean, minimal, professional look
+- Championship trophy being held up high
+- Gold medals displayed prominently
+- Confetti and golden streamers in the background
+- Stadium or award ceremony setting with dramatic lighting
+- Silhouettes or abstract representation of a winning team celebrating
+- Realistic, cinematic style
 
-Text layout:
-- Top: "TEAM ${winner.colorIdx + 1}" in bold modern font
-- Center: Abstract representation of teamwork/victory
-- Bottom: "PROJECT LEADERS" in large bold red text (like Silicon Valley logo)
-- Below that: "Total Asset: ${Math.abs(winner.score)} Billion"
-- Team members: "${memberNames}"
+Text overlay:
+- Top: "TEAM ${winner.colorIdx + 1} CHAMPIONS" in bold golden metallic text
+- Center: Grand trophy with gold medals
+- Bottom: "STRATEGIC POSITIONING MASTERS" in elegant white text
+- Score: "${Math.abs(winner.score)} BILLION"
+- Team: "${memberNames}"
 
-Style:
-- Clean, professional, minimal
-- High contrast
-- Modern corporate aesthetic
-- Mood: professional, triumphant, sophisticated
-
-Make it look like a professional TV show or corporate poster.`;
+Style: Celebratory, triumphant, like an official Olympic ceremony poster`;
 
       contents = imagePrompt;
     }
