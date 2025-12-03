@@ -4,7 +4,7 @@ import { CHIP_UNIT } from "../constants";
 
 // Models to use
 const GEMINI_TEXT_MODEL = "gemini-2.0-flash";  // For text analysis/reports
-const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp";  // For image generation
+const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp-image-generation";  // For image generation (Nano Banana)
 
 // Get Gemini API client with API key from environment variable
 const getClient = (): GoogleGenAI | null => {
@@ -317,30 +317,20 @@ export const generateWinnerPoster = async (
       const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
       const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
 
-      imagePrompt = `Transform this team photo into a professional winner poster inspired by HBO's Silicon Valley poster style.
+      imagePrompt = `Edit this team photo to create a professional winner poster. Keep ALL people exactly as they are.
 
-ABSOLUTE REQUIREMENTS:
-1. EVERY SINGLE PERSON in the original photo MUST appear in the final image. Count the people and ensure the EXACT same number appears.
-2. ALL faces must be clearly visible and NOT covered by any text or graphics.
-3. Preserve each person's exact face, expression, pose, and position.
+EDITING INSTRUCTIONS:
+1. Keep every person's face, body, pose, and position EXACTLY the same - do not modify any person
+2. Only change the BACKGROUND to a clean gradient (light gray to white)
+3. Add professional studio lighting effect on the people
+4. Add slight vignette effect around edges
 
-Style (like Silicon Valley HBO poster):
-- Clean, simple gradient background (light gray to white, or subtle blue gradient)
-- Focus entirely on the PEOPLE - their faces should be the main visual element
-- Professional, polished look with good lighting on faces
-- Slight vignette effect around edges
+TEXT TO ADD (in empty space only, never over people):
+- Top: "TEAM ${winner.colorIdx + 1}" in bold black modern font
+- Bottom: "PROJECT LEADERS" in large bold red text
+- Below that: "Total Asset: ${Math.abs(winner.score)} Billion" in smaller text
 
-Text placement (MUST NOT cover any person):
-- Top area (above people's heads): "TEAM ${winner.colorIdx + 1}" in bold modern font
-- Very bottom of image (below people): "PROJECT LEADERS" in large bold red or orange text, similar to Silicon Valley logo style
-- Small text below that: "Total Asset: ${Math.abs(winner.score)} Billion"
-
-CRITICAL:
-- Text must be positioned in empty space ONLY - never overlapping with any person
-- If the original photo has 7 people, the output MUST have exactly 7 people
-- Every face from the original must be recognizable in the output
-
-The final result should look like a professional TV show promotional poster featuring the actual team members.`;
+IMPORTANT: Do NOT alter, replace, or regenerate any person's face. The people must remain 100% identical to the input photo.`;
 
       contents = [
         {
