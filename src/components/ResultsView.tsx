@@ -5,7 +5,7 @@ import { generateGameAnalysis, generateWinnerPoster, generatePosterDescription }
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import {
-  Trophy, Medal, Upload, Download, Cpu, Loader2,
+  Trophy, Medal, Download, Cpu, Loader2,
   ArrowLeft, Crown, TrendingUp, Target, Sparkles,
   Image as ImageIcon, FileText, FileDown
 } from 'lucide-react';
@@ -17,7 +17,6 @@ interface ResultsViewProps {
 
 const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
   const [posterImage, setPosterImage] = useState<string | null>(null);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [generatingPoster, setGeneratingPoster] = useState(false);
   const [posterError, setPosterError] = useState<string | null>(null);
   const [posterDescription, setPosterDescription] = useState<string | null>(null);
@@ -28,7 +27,6 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
 
   // All teams expanded by default - no state needed
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Generate PDF from content
@@ -105,35 +103,14 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
     return sequences;
   };
 
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImage(event.target?.result as string);
-      setPosterError(null);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Generate poster
+  // Generate poster using Imagen 3
   const handleGeneratePoster = async () => {
-    if (!uploadedImage) return;
-
     setGeneratingPoster(true);
     setPosterError(null);
+    setPosterDescription(null);
 
     try {
-      // Extract base64 and mime type from data URL
-      const matches = uploadedImage.match(/^data:(.+);base64,(.+)$/);
-      if (!matches) throw new Error("Invalid image format");
-
-      const mimeType = matches[1];
-      const base64Data = matches[2];
-
-      const result = await generateWinnerPoster(gameState, base64Data, mimeType);
+      const result = await generateWinnerPoster(gameState);
       setPosterImage(result);
     } catch (error: any) {
       console.error("Poster generation failed:", error);
@@ -257,55 +234,40 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
         <section className="bg-zinc-900/50 rounded-2xl border border-zinc-800 p-6">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <Sparkles className="text-purple-400" size={24} />
-            우승팀 포스터 생성
+            AI 우승팀 포스터 생성 (Imagen 3)
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Upload Area */}
+            {/* Generation Controls */}
             <div className="space-y-4">
               <p className="text-sm text-zinc-400">
-                우승팀 단체 사진을 업로드하면 AI가 넷플릭스 드라마 "카지노" 스타일의
-                멋진 우승 포스터를 생성합니다.
+                AI가 넷플릭스 드라마 "카지노" 스타일의 우승팀 포스터를 자동으로 생성합니다.
               </p>
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
-
-              {uploadedImage ? (
-                <div className="relative">
-                  <img
-                    src={uploadedImage}
-                    alt="Uploaded team"
-                    className="w-full h-64 object-cover rounded-xl border border-zinc-700"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-2 right-2 px-3 py-1.5 bg-black/80 rounded-lg text-xs text-zinc-300 hover:text-white border border-zinc-600"
-                  >
-                    다시 선택
-                  </button>
+              <div className="glass-dark rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-purple-400">
+                  <Sparkles size={16} />
+                  <span className="font-semibold text-sm">포스터 정보</span>
                 </div>
-              ) : (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-64 border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center gap-3 hover:border-purple-500/50 hover:bg-purple-500/5 transition-colors"
-                >
-                  <Upload size={40} className="text-zinc-600" />
-                  <span className="text-zinc-500">사진 업로드</span>
-                  <span className="text-xs text-zinc-600">JPG, PNG (최대 10MB)</span>
-                </button>
-              )}
+                <div className="text-xs text-zinc-400 space-y-1">
+                  <p>우승팀: <span className="text-white font-semibold">{winner.colorIdx + 1}팀</span></p>
+                  <p>팀원: <span className="text-white">{winner.members?.join(', ') || winner.name}</span></p>
+                  <p>최종 점수: <span className="text-yellow-400 font-semibold">{winner.score}억</span></p>
+                </div>
+              </div>
+
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-xl p-4">
+                <p className="text-xs text-amber-400">
+                  <strong>참고:</strong> Imagen 3 이미지 생성은 Google Cloud 결제(Billing)가 연결된
+                  프로젝트에서만 작동합니다. 무료 API 키로는 사용할 수 없습니다.
+                </p>
+              </div>
 
               <button
                 onClick={handleGeneratePoster}
-                disabled={!uploadedImage || generatingPoster}
+                disabled={generatingPoster}
                 className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all
-                  ${uploadedImage && !generatingPoster
+                  ${!generatingPoster
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}
                 `}
@@ -313,7 +275,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
                 {generatingPoster ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
-                    포스터 생성 중...
+                    Imagen 3로 포스터 생성 중...
                   </>
                 ) : (
                   <>
