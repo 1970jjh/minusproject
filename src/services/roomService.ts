@@ -93,16 +93,18 @@ export const joinRoom = async (
   }
 
   const roomData = snapshot.val();
-  const gameState: GameState = roomData.gameState;
+  const gameState: GameState = roomData.gameState || {};
+  const players = gameState.players || [];
+  const config = roomData.config || { maxTeams: 6 };
 
   // Check if room is full
-  if (gameState.players.length >= roomData.config.maxTeams) {
+  if (players.length >= config.maxTeams) {
     console.error('Room is full');
     return false;
   }
 
   // Check if player already exists
-  if (gameState.players.find(p => p.id === playerInfo.id)) {
+  if (players.find((p: Player) => p.id === playerInfo.id)) {
     return true; // Already joined
   }
 
@@ -114,7 +116,7 @@ export const joinRoom = async (
     isOnline: true
   };
 
-  const updatedPlayers = [...gameState.players, newPlayer];
+  const updatedPlayers = [...players, newPlayer];
 
   await update(ref(database, `rooms/${roomId}/gameState`), {
     players: updatedPlayers,

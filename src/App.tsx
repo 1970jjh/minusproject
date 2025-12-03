@@ -38,7 +38,19 @@ const App: React.FC = () => {
 
     const unsubscribe = subscribeToGameState(currentRoomId, (newGameState) => {
       if (newGameState) {
-        setGameState(newGameState);
+        // Ensure gameState always has valid structure
+        const safeGameState: GameState = {
+          ...newGameState,
+          players: newGameState.players || [],
+          deck: newGameState.deck || [],
+          config: newGameState.config || { roomName: 'Game Room', maxTeams: 6 },
+          logs: newGameState.logs || [],
+          pot: newGameState.pot || 0,
+          turnCount: newGameState.turnCount || 1,
+          currentPlayerIndex: newGameState.currentPlayerIndex || 0,
+          phase: newGameState.phase || GamePhase.LOBBY,
+        };
+        setGameState(safeGameState);
       }
     });
 
@@ -82,7 +94,9 @@ const App: React.FC = () => {
     if (!currentRoomId) return;
 
     try {
-      await startGame(currentRoomId, gameState.players, gameState.config);
+      const players = gameState.players || [];
+      const config = gameState.config || { roomName: 'Game Room', maxTeams: 6 };
+      await startGame(currentRoomId, players, config);
     } catch (error) {
       console.error('Failed to start game:', error);
     }
@@ -92,7 +106,8 @@ const App: React.FC = () => {
     if (!currentRoomId) return;
 
     try {
-      await resetGame(currentRoomId, gameState.config);
+      const config = gameState.config || { roomName: 'Game Room', maxTeams: 6 };
+      await resetGame(currentRoomId, config);
       setAdminViewingPlayerId(null);
     } catch (error) {
       console.error('Failed to reset game:', error);
@@ -102,8 +117,11 @@ const App: React.FC = () => {
   const handlePlayerAction = async (playerId: string, action: 'pass' | 'take') => {
     if (!currentRoomId) return;
 
-    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    if (currentPlayer.id !== playerId) return;
+    const players = gameState.players || [];
+    if (players.length === 0) return;
+
+    const currentPlayer = players[gameState.currentPlayerIndex];
+    if (!currentPlayer || currentPlayer.id !== playerId) return;
 
     const nextState = processTurn(gameState, action);
 

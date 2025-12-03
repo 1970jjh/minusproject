@@ -15,11 +15,15 @@ interface AdminViewProps {
 }
 
 const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, onViewPlayer, onExit }) => {
-  const currentPlayer = gameState.players.length > 0
-    ? gameState.players[gameState.currentPlayerIndex]
+  // Safety: ensure players is always an array
+  const players = gameState.players || [];
+  const config = gameState.config || { roomName: 'Game Room', maxTeams: 6 };
+
+  const currentPlayer = players.length > 0
+    ? players[gameState.currentPlayerIndex]
     : null;
-  const winner = gameState.phase === GamePhase.FINISHED && gameState.players.length > 0
-    ? [...gameState.players].sort((a, b) => b.score - a.score)[0]
+  const winner = gameState.phase === GamePhase.FINISHED && players.length > 0
+    ? [...players].sort((a, b) => b.score - a.score)[0]
     : null;
 
   // -- Lobby Mode --
@@ -44,17 +48,17 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                 <span className="text-[10px] font-mono uppercase tracking-widest">Admin Control</span>
             </div>
             <h1 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-600 tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-              {gameState.config.roomName}
+              {config.roomName}
             </h1>
             <p className="text-emerald-200/60 font-medium tracking-wide">
-              WAITING FOR PLAYERS ({gameState.players.length} / {gameState.config.maxTeams})
+              WAITING FOR PLAYERS ({players.length} / {config.maxTeams})
             </p>
         </div>
 
         {/* Players Grid */}
         <div className="relative z-10 w-full max-w-7xl mb-16">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {gameState.players.map(player => (
+            {players.map(player => (
                 <div key={player.id} className="group relative bg-emerald-900/40 border border-emerald-500/20 p-6 rounded-2xl flex flex-col items-center backdrop-blur-sm transition-all hover:bg-emerald-900/60 hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-xl border-4 border-zinc-800 group-hover:scale-110 transition-transform">
                      <Users size={32} className="text-zinc-400 group-hover:text-white transition-colors" />
@@ -72,9 +76,9 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                    </button>
                 </div>
             ))}
-            {Array.from({ length: Math.max(0, gameState.config.maxTeams - gameState.players.length) }).map((_, i) => (
+            {Array.from({ length: Math.max(0, config.maxTeams - players.length) }).map((_, i) => (
                 <div key={`empty-${i}`} className="bg-black/10 border-2 border-dashed border-emerald-500/10 rounded-2xl flex flex-col items-center justify-center min-h-[220px]">
-                   <span className="text-emerald-500/20 font-black text-4xl mb-2 opacity-50">{i + 1 + gameState.players.length}</span>
+                   <span className="text-emerald-500/20 font-black text-4xl mb-2 opacity-50">{i + 1 + players.length}</span>
                    <span className="text-emerald-500/30 text-xs font-bold uppercase tracking-widest">Open Seat</span>
                 </div>
             ))}
@@ -85,10 +89,10 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
         <div className="relative z-10">
           <button
             onClick={onStartGame}
-            disabled={gameState.players.length < MIN_PLAYERS}
+            disabled={players.length < MIN_PLAYERS}
             className={`
               px-12 py-6 rounded-full font-black text-2xl flex items-center gap-4 transition-all duration-300
-              ${gameState.players.length >= MIN_PLAYERS 
+              ${players.length >= MIN_PLAYERS 
                 ? 'bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white shadow-[0_0_50px_rgba(220,38,38,0.4)] hover:scale-105 hover:shadow-[0_0_80px_rgba(220,38,38,0.6)] border-4 border-red-900' 
                 : 'bg-zinc-800 text-zinc-600 cursor-not-allowed border-4 border-zinc-900'}
             `}
@@ -138,8 +142,8 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                 <LayoutGrid size={20} className="text-zinc-400" />
              </div>
              <div>
-                <h1 className="text-sm font-bold text-zinc-300 uppercase tracking-widest">{gameState.config.roomName}</h1>
-                <span className="text-[10px] text-zinc-500 font-mono">ROUND {gameState.turnCount} / DECK {gameState.deck.length}</span>
+                <h1 className="text-sm font-bold text-zinc-300 uppercase tracking-widest">{config.roomName}</h1>
+                <span className="text-[10px] text-zinc-500 font-mono">ROUND {gameState.turnCount} / DECK {gameState.deck?.length || 0}</span>
              </div>
           </div>
         </div>
@@ -213,11 +217,11 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
             </div>
 
             {/* Players distributed elliptically */}
-            {gameState.players.map((player, index) => (
-                <div 
+            {players.map((player, index) => (
+                <div
                     key={player.id}
                     className="absolute w-64 z-30 transition-all duration-500"
-                    style={getPlayerPosition(index, gameState.players.length)}
+                    style={getPlayerPosition(index, players.length)}
                 >
                     <PlayerBoard 
                         player={player} 

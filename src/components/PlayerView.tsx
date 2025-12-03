@@ -24,7 +24,8 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
     return () => clearInterval(timer);
   }, []);
 
-  const me = gameState.players.find(p => p.id === playerId);
+  const players = gameState.players || [];
+  const me = players.find(p => p.id === playerId);
   
   // -- Error / Loading States --
   if (!me) {
@@ -61,7 +62,7 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
     );
   }
 
-  const isMyTurn = gameState.players[gameState.currentPlayerIndex]?.id === playerId && gameState.phase === GamePhase.PLAYING;
+  const isMyTurn = players[gameState.currentPlayerIndex]?.id === playerId && gameState.phase === GamePhase.PLAYING;
   const colorTheme = TEAM_COLORS[me.colorIdx % TEAM_COLORS.length];
 
   const handleGetAdvice = async () => {
@@ -225,7 +226,7 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
                        다른 팀이 고민 중입니다
                     </p>
                     <p className="text-zinc-600 text-sm">
-                       Turn: <span className="text-zinc-300 font-bold">{gameState.players[gameState.currentPlayerIndex]?.name}</span>
+                       Turn: <span className="text-zinc-300 font-bold">{players[gameState.currentPlayerIndex]?.name}</span>
                     </p>
                 </div>
              </div>
