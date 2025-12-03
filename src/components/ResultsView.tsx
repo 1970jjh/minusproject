@@ -528,19 +528,23 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
           ) : (
             <div className="space-y-6">
               {/* Render each section as a block */}
-              {analysis.sections.map((section, idx) => (
-                <div
-                  key={idx}
-                  className={`rounded-xl border p-6 ${getSectionStyle(section.type)}`}
-                >
-                  <h4 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {section.title}
-                  </h4>
-                  <div className={`whitespace-pre-wrap leading-relaxed ${isDark ? 'text-zinc-200' : 'text-gray-700'}`}>
-                    {section.content}
+              {analysis.sections.map((section, idx) => {
+                const isMvpSection = section.type === 'winner' || section.title.includes('MVP');
+                return (
+                  <div
+                    key={idx}
+                    className={`rounded-xl border ${isMvpSection ? 'p-8' : 'p-6'} ${getSectionStyle(section.type)} ${isMvpSection ? 'shadow-lg' : ''}`}
+                  >
+                    <h4 className={`font-bold mb-4 ${isMvpSection ? 'text-2xl' : 'text-lg'} ${isDark ? 'text-white' : 'text-gray-900'} ${isMvpSection ? 'flex items-center gap-3' : ''}`}>
+                      {isMvpSection && <Trophy className="text-yellow-500" size={28} />}
+                      {section.title}
+                    </h4>
+                    <div className={`whitespace-pre-wrap leading-relaxed ${isMvpSection ? 'text-lg' : ''} ${isDark ? 'text-zinc-200' : 'text-gray-700'}`}>
+                      {section.content}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               <button
                 onClick={handleGenerateAnalysis}

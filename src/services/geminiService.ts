@@ -168,7 +168,9 @@ export const generateGameAnalysis = async (gameState: GameState): Promise<GameAn
 [최종 결과]
 ${teamsInfo}
 
-다음 형식으로 매우 상세하게 분석해주세요. 각 섹션은 [SECTION:제목] 형식으로 시작하고 [/SECTION]으로 끝냅니다. 마크다운 기호(*, **)는 사용하지 마세요.
+다음 형식으로 매우 상세하게 분석해주세요. 각 섹션은 [SECTION:제목] 형식으로 시작하고 [/SECTION]으로 끝냅니다.
+
+중요: 마크다운 기호를 절대 사용하지 마세요! *, **, #, ##, - 등의 기호를 텍스트에 포함하지 마세요. 순수한 텍스트만 작성하세요.
 
 [SECTION:EXECUTIVE SUMMARY (경영 요약)]
 이번 시뮬레이션의 핵심 인사이트를 3-4문장으로 요약해주세요. 어떤 전략이 효과적이었고, 어떤 팀이 왜 성공/실패했는지 한눈에 파악할 수 있도록 작성해주세요.
