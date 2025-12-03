@@ -195,6 +195,19 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                 </div>
              </div>
           </div>
+          {/* JJ Creative Branding */}
+          <div className="mt-3 glass rounded-lg px-4 py-2 flex items-center gap-2">
+            <span className="text-[10px] font-bold tracking-wider">
+              <span className="text-cyan-400">JJ</span>
+              <span className="text-white"> Creative </span>
+              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">교육연구소</span>
+            </span>
+            <div className="flex gap-0.5">
+              <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse"></div>
+              <div className="w-1 h-1 rounded-full bg-indigo-400 animate-pulse delay-100"></div>
+              <div className="w-1 h-1 rounded-full bg-purple-400 animate-pulse delay-200"></div>
+            </div>
+          </div>
         </div>
         <div className="pointer-events-auto flex gap-3">
           <button onClick={onReset} className="glass hover:bg-red-500/10 hover:border-red-500/30 text-zinc-400 hover:text-red-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2">
