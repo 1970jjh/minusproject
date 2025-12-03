@@ -235,6 +235,25 @@ export const getRoom = async (roomId: string): Promise<Room | null> => {
   };
 };
 
+// Check if a player exists in a room (by checking memberIds)
+export const checkPlayerInRoom = async (roomId: string, playerId: string): Promise<boolean> => {
+  const roomRef = ref(database, `rooms/${roomId}`);
+  const snapshot = await get(roomRef);
+
+  if (!snapshot.exists()) {
+    return false;
+  }
+
+  const data = snapshot.val();
+  const players = data.gameState?.players || [];
+
+  // Check if any team has this playerId in their memberIds
+  return players.some((player: any) => {
+    const memberIds = player.memberIds || [player.id];
+    return memberIds.includes(playerId);
+  });
+};
+
 // Update AI advice usage for a team
 export const MAX_AI_ADVICE_PER_TEAM = 5;
 
