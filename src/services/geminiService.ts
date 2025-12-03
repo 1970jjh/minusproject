@@ -105,51 +105,117 @@ ${allPlayersInfo}
   }
 };
 
-export const generateGameAnalysis = async (gameState: GameState): Promise<string> => {
+export interface AnalysisSection {
+  title: string;
+  content: string;
+  type: 'summary' | 'team' | 'winner' | 'insight' | 'positioning';
+}
+
+export interface GameAnalysisResult {
+  sections: AnalysisSection[];
+  rawText: string;
+}
+
+export const generateGameAnalysis = async (gameState: GameState): Promise<GameAnalysisResult> => {
   try {
     const ai = getClient();
     if (!ai) {
-      return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
+      return {
+        sections: [{
+          title: "오류",
+          content: "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.",
+          type: "summary"
+        }],
+        rawText: ""
+      };
     }
 
     const rankedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
     const winner = rankedPlayers[0];
+    const companyName = gameState.config?.roomName || "참여 기업";
 
     const teamsInfo = rankedPlayers.map((p, rank) => {
       const sequences = findSequences(p.cards);
+      const cardSum = p.cards.reduce((sum, c) => sum + c, 0);
+      const sequenceBonus = sequences.reduce((sum, seq) => {
+        const saved = seq.slice(1).reduce((s, c) => s + c, 0);
+        return sum + saved;
+      }, 0);
       return `${rank + 1}위 - ${p.colorIdx + 1}팀 (${p.members?.join(', ') || p.name}):
   - 최종 점수: ${p.score}억
   - 보유 자원: ${p.chips}억
   - 보유 프로젝트: [${p.cards.join(', ') || '없음'}]
-  - 연속 시퀀스: ${sequences.length > 0 ? sequences.map(s => `[${s.join(', ')}]`).join(', ') : '없음'}`;
+  - 프로젝트 총합: ${cardSum}억
+  - 연속 시퀀스: ${sequences.length > 0 ? sequences.map(s => `[${s.join(', ')}]`).join(', ') : '없음'}
+  - 시퀀스 절감액: ${sequenceBonus}억`;
     }).join('\n\n');
 
     const prompt = `
-'마이너스 경매(Strategic Positioning)' 게임 결과를 분석해주세요.
+당신은 경영전략 전문가이자 게임 분석가입니다. 'Strategic Positioning(마이너스 경매)' 게임 결과를 매우 상세하고 풍부하게 분석해주세요.
 
 [게임 규칙]
-- 마이너스 프로젝트(-26억 ~ -50억) 경매
-- 연속 숫자를 모으면 가장 작은 수만 부채로 계산 (시너지 효과)
+- 각 팀은 마이너스 프로젝트(-26억 ~ -50억)를 경매를 통해 획득합니다
+- PASS: 자원 1억을 팟에 지불하고 다음 팀으로 넘김
+- TAKE: 현재 프로젝트와 팟의 자원을 모두 획득
+- 연속 숫자(예: -30, -31, -32)를 모으면 가장 작은 수(-30)만 부채로 계산되는 시너지 효과
+- 최종 점수 = 보유 자원 + 프로젝트 점수(시퀀스 적용)
+
+[게임 정보]
+- 참여 회사/기관: ${companyName}
+- 총 참여 팀 수: ${rankedPlayers.length}팀
+- 총 진행 라운드: ${gameState.turnCount}
 
 [최종 결과]
 ${teamsInfo}
 
-다음 형식으로 분석해주세요:
+다음 형식으로 매우 상세하게 분석해주세요. 각 섹션은 [SECTION:제목] 형식으로 시작하고 [/SECTION]으로 끝냅니다. 마크다운 기호(*, **)는 사용하지 마세요.
 
-## 게임 종합 평가
-(전체 게임 흐름 분석)
+[SECTION:EXECUTIVE SUMMARY (경영 요약)]
+이번 시뮬레이션의 핵심 인사이트를 3-4문장으로 요약해주세요. 어떤 전략이 효과적이었고, 어떤 팀이 왜 성공/실패했는지 한눈에 파악할 수 있도록 작성해주세요.
+[/SECTION]
 
-## 전략 분석
-(각 팀의 전략을 블루오션/레드오션/퍼플오션 관점에서)
+[SECTION:초기 형성 시장 (Early Market)]
+게임 초반(라운드 1-${Math.floor(gameState.turnCount / 3)}) 각 팀의 포지셔닝 전략을 분석해주세요. 어떤 팀이 초반에 공격적으로 프로젝트를 확보했고, 어떤 팀이 자원을 축적했는지 분석해주세요. 구체적인 수치와 함께 설명해주세요.
+[/SECTION]
 
-## 우승팀 (${winner.colorIdx + 1}팀) 성공 요인
-- 핵심 성공 요인
-- 경영전략적 시사점
+[SECTION:완전 경쟁 시장 (Perfect Competition)]
+게임 중반의 경쟁 양상을 분석해주세요. 팀들 간의 자원 경쟁이 어떻게 전개되었는지, 동률(Tie) 상황이나 긴장감 있는 순간들을 분석해주세요.
+[/SECTION]
 
-## 교훈
-(이 게임에서 배울 수 있는 인사이트)
+[SECTION:독점적 경쟁 시장 (Monopolistic Competition)]
+게임 후반에 각 팀이 차별화된 포지션을 어떻게 구축했는지 분석해주세요. 특정 숫자 영역을 독점하려는 시도나 시퀀스 완성을 위한 전략적 움직임을 설명해주세요.
+[/SECTION]
 
-한국어로 전문적이면서 이해하기 쉽게 작성해주세요.
+[SECTION:팀별 전략 평가 (Team Strategy Critique)]
+각 팀의 전략을 개별적으로 상세히 평가해주세요. 각 팀당 3-4문장으로 작성하고, 블루오션/레드오션/퍼플오션 전략 관점에서 분석해주세요:
+${rankedPlayers.map((p, rank) => `
+Team ${p.colorIdx + 1} (${rank + 1}위): 이 팀의 전략적 선택과 그 결과를 분석하세요.`).join('')}
+[/SECTION]
+
+[SECTION:STRATEGIC MVP TEAM (전략 MVP)]
+가장 뛰어난 전략적 판단을 보여준 팀을 선정하고, 그 이유를 경영학적 관점에서 상세히 설명해주세요. 단순 점수 1위가 아닌, 가장 효율적인 자원 배분과 시기 적절한 의사결정을 한 팀을 선정해주세요. 구체적인 사례와 함께 설명해주세요.
+[/SECTION]
+
+[SECTION:FINAL CONCLUSION (최종 결론)]
+이 게임에서 배울 수 있는 핵심 교훈을 정리해주세요:
+1. 포지셔닝 전략 관점의 인사이트
+2. 자원 배분(Resource Allocation)의 중요성
+3. 타이밍과 의사결정의 관계
+4. 경쟁과 협력의 균형
+실제 비즈니스에 적용할 수 있는 시사점을 포함해주세요.
+[/SECTION]
+
+[SECTION:${companyName} 포지셔닝 전략 제안]
+"${companyName}"이라는 회사/기관명을 분석하여, 이 회사가 실제로 적용할 수 있는 포지셔닝 전략을 제안해주세요:
+1. 현재 시장에서의 추정 포지션 분석
+2. 블루오션 전략 기회 탐색
+3. 차별화 전략 제안
+4. 리스크 관리 방안
+5. 구체적인 실행 로드맵 제안
+회사명에서 유추할 수 있는 산업/서비스 특성을 반영하여 맞춤형 전략을 제시해주세요. 만약 회사명이 일반적인 경우 IT/스타트업 관점에서 작성해주세요.
+[/SECTION]
+
+모든 내용을 한국어로, 전문적이면서도 이해하기 쉽게 작성해주세요. 분량을 아끼지 말고 풍성하게 작성해주세요.
 `;
 
     const response = await ai.models.generateContent({
@@ -157,9 +223,50 @@ ${teamsInfo}
       contents: prompt,
     });
 
-    return response.text || "분석을 생성할 수 없습니다.";
+    const rawText = response.text || "";
+
+    // Parse sections from the response
+    const sections: AnalysisSection[] = [];
+    const sectionRegex = /\[SECTION:([^\]]+)\]([\s\S]*?)\[\/SECTION\]/g;
+    let match;
+
+    while ((match = sectionRegex.exec(rawText)) !== null) {
+      const title = match[1].trim();
+      const content = match[2].trim();
+
+      let type: AnalysisSection['type'] = 'summary';
+      if (title.includes('팀별') || title.includes('Team Strategy')) {
+        type = 'team';
+      } else if (title.includes('MVP') || title.includes('우승')) {
+        type = 'winner';
+      } else if (title.includes('포지셔닝 전략 제안')) {
+        type = 'positioning';
+      } else if (title.includes('CONCLUSION') || title.includes('교훈')) {
+        type = 'insight';
+      }
+
+      sections.push({ title, content, type });
+    }
+
+    // If no sections found, return raw text as single section
+    if (sections.length === 0) {
+      sections.push({
+        title: "게임 분석 결과",
+        content: rawText,
+        type: "summary"
+      });
+    }
+
+    return { sections, rawText };
   } catch (error) {
-    return handleApiError(error);
+    return {
+      sections: [{
+        title: "오류",
+        content: handleApiError(error as Error),
+        type: "summary"
+      }],
+      rawText: ""
+    };
   }
 };
 
@@ -181,9 +288,10 @@ const findSequences = (cards: number[]): number[][] => {
   return sequences;
 };
 
-// Generate winner poster image using Imagen 3
+// Generate winner poster image using Gemini 2.0 Flash
 export const generateWinnerPoster = async (
-  gameState: GameState
+  gameState: GameState,
+  teamPhotoBase64?: string
 ): Promise<string> => {
   try {
     const ai = getClient();
@@ -194,21 +302,68 @@ export const generateWinnerPoster = async (
     const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
     const memberNames = winner.members?.join(', ') || winner.name;
 
-    // Imagen 3 image generation prompt
-    const imagePrompt = `Create a dramatic Netflix Korean drama "Casino" style winner poster.
-Dark cinematic atmosphere with neon purple and gold lighting.
-Text overlay: "TEAM ${winner.colorIdx + 1} - WINNER" in bold metallic gold font.
-"Strategic Positioning Champion" subtitle.
-Score: "${winner.score} Billion" displayed prominently.
-Members: "${memberNames}" in elegant white text.
-Background: luxurious casino/auction house with dramatic shadows.
-Style: high contrast, cinematic color grading, premium quality, dramatic lighting.
-Mood: triumphant, prestigious, exclusive.`;
+    // Build the prompt based on whether team photo is provided
+    let imagePrompt: string;
+    let contents: any;
+
+    if (teamPhotoBase64) {
+      // Extract base64 data from data URL
+      const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
+      const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
+
+      imagePrompt = `Based on this team photo, create a dramatic Netflix Korean drama "Casino" (starring Choi Min-sik) style winner poster.
+
+IMPORTANT: Use the faces and people from the provided team photo as the main subjects of the poster.
+Transform them into stylized characters with the "Casino" drama aesthetic.
+
+Style requirements:
+- Dark cinematic atmosphere with neon purple, gold, and deep blue lighting
+- The team members should look like K-drama protagonists in a high-stakes casino/auction setting
+- Keep their actual facial features but enhance with dramatic lighting and styling
+- Add text overlay: "TEAM ${winner.colorIdx + 1} - WINNER" in bold metallic gold font
+- Add subtitle: "Strategic Positioning Champion"
+- Display score: "${winner.score} Billion" prominently
+- Member names: "${memberNames}" in elegant white text at the bottom
+- Background: luxurious VIP casino room or auction house with dramatic shadows and bokeh lights
+- Style: high contrast, cinematic color grading, premium quality, dramatic rim lighting
+- Mood: triumphant, prestigious, powerful, mysterious
+
+Make it look like an official Netflix Korea drama poster featuring the actual team members.`;
+
+      contents = [
+        {
+          inlineData: {
+            mimeType: mimeType,
+            data: base64Data
+          }
+        },
+        { text: imagePrompt }
+      ];
+    } else {
+      // No team photo provided - generate without reference
+      imagePrompt = `Create a dramatic Netflix Korean drama "Casino" (starring Choi Min-sik) style winner poster.
+
+Style requirements:
+- Dark cinematic atmosphere with neon purple, gold, and deep blue lighting
+- Create stylized silhouettes or abstract representation of a winning team
+- Add text overlay: "TEAM ${winner.colorIdx + 1} - WINNER" in bold metallic gold font
+- Add subtitle: "Strategic Positioning Champion"
+- Display score: "${winner.score} Billion" prominently
+- Member names: "${memberNames}" in elegant white text at the bottom
+- Background: luxurious VIP casino room or auction house with dramatic shadows, poker chips, and bokeh lights
+- Style: high contrast, cinematic color grading, premium quality, dramatic lighting
+- Include visual elements: gold chips, playing cards, crown symbol
+- Mood: triumphant, prestigious, powerful, mysterious
+
+Make it look like an official Netflix Korea drama promotional poster.`;
+
+      contents = imagePrompt;
+    }
 
     // Use Gemini experimental model for image generation
     const response = await ai.models.generateContent({
       model: GEMINI_IMAGE_MODEL,
-      contents: imagePrompt,
+      contents: contents,
       config: {
         responseModalities: ["image", "text"],
       }
@@ -228,12 +383,12 @@ Mood: triumphant, prestigious, exclusive.`;
   } catch (error: any) {
     console.error("Poster generation error:", error);
 
-    // Check for billing/permission errors specifically for Imagen
+    // Check for billing/permission errors
     const errorMessage = error?.message || error?.toString() || "";
     if (errorMessage.includes("403") || errorMessage.includes("400") ||
         errorMessage.includes("billing") || errorMessage.includes("PERMISSION_DENIED") ||
         errorMessage.includes("not enabled") || errorMessage.includes("quota")) {
-      throw new Error("API 키의 결제 설정(Billing)을 확인해주세요. Imagen 3 이미지 생성은 Google Cloud 결제가 연결된 프로젝트에서만 작동합니다.");
+      throw new Error("이미지 생성에 실패했습니다. API 키와 결제 설정을 확인해주세요.");
     }
 
     throw error;

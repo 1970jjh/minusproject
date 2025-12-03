@@ -7,6 +7,7 @@ import LandingPage from './components/LandingPage';
 import ResultsView from './components/ResultsView';
 import Modal from './components/Modal';
 import { BookOpen } from 'lucide-react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import {
   createRoom,
   joinRoom,
@@ -204,18 +205,20 @@ const App: React.FC = () => {
 
   if (role === 'NONE') {
     return (
-      <LandingPage
-        onJoinAsAdmin={handleCreateGame}
-        onJoinAsPlayer={handleJoinAsPlayer}
-        onEnterRoomAsAdmin={handleEnterRoomAsAdmin}
-        isAdminAuthenticated={isAdminAuthenticated}
-        onAdminLoginSuccess={handleAdminAuthSuccess}
-      />
+      <ThemeProvider>
+        <LandingPage
+          onJoinAsAdmin={handleCreateGame}
+          onJoinAsPlayer={handleJoinAsPlayer}
+          onEnterRoomAsAdmin={handleEnterRoomAsAdmin}
+          isAdminAuthenticated={isAdminAuthenticated}
+          onAdminLoginSuccess={handleAdminAuthSuccess}
+        />
+      </ThemeProvider>
     );
   }
 
   return (
-    <>
+    <ThemeProvider>
       {role === 'ADMIN' && (
         showResults ? (
           <ResultsView
@@ -334,7 +337,7 @@ const App: React.FC = () => {
           </div>
         </Modal>
       )}
-    </>
+    </ThemeProvider>
   );
 };
 
