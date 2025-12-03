@@ -188,6 +188,44 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
             </div>
         )}
 
+        {/* Other Teams' Projects */}
+        <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">다른 팀 현황</p>
+            <div className="space-y-2">
+                {[...players]
+                    .filter(p => p.id !== playerId)
+                    .sort((a, b) => a.colorIdx - b.colorIdx)
+                    .map(player => {
+                        const teamColor = TEAM_COLORS[player.colorIdx % TEAM_COLORS.length];
+                        return (
+                            <div key={player.id} className="flex items-center gap-3 p-2 bg-black/30 rounded-lg">
+                                <div className={`w-6 h-6 rounded-full ${teamColor.bg} flex items-center justify-center`}>
+                                    <span className="text-white text-xs font-bold">{player.colorIdx + 1}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <span className="text-zinc-400 font-bold">{player.colorIdx + 1}팀</span>
+                                        <span className="text-zinc-600">|</span>
+                                        <span className="text-emerald-400 font-mono">{player.chips}억</span>
+                                        <span className="text-zinc-600">|</span>
+                                        <span className={`font-mono ${player.score < 0 ? 'text-red-400' : 'text-blue-400'}`}>
+                                            {player.score > 0 ? '+' : ''}{player.score}
+                                        </span>
+                                    </div>
+                                    {player.cards.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {[...player.cards].sort((a,b)=>a-b).map(c => (
+                                                <span key={c} className="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-500">{c}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+            </div>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex-1 flex flex-col justify-end gap-4 pb-8">
            {isMyTurn ? (
