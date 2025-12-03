@@ -25,7 +25,6 @@ export interface LogEntry {
 export interface GameConfig {
   roomName: string;
   maxTeams: number;
-  geminiApiKey?: string; // Optional API key for AI advice feature
 }
 
 export const MAX_TEAM_MEMBERS = 20;

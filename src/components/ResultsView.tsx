@@ -2,10 +2,12 @@ import React, { useState, useRef } from 'react';
 import { GameState, Player } from '../types';
 import { TEAM_COLORS } from '../constants';
 import { generateGameAnalysis, generateWinnerPoster, generatePosterDescription } from '../services/geminiService';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import {
   Trophy, Medal, Upload, Download, Cpu, Loader2,
   ArrowLeft, Crown, TrendingUp, Target, Sparkles,
-  Image as ImageIcon, FileText, ChevronDown, ChevronUp
+  Image as ImageIcon, FileText, FileDown
 } from 'lucide-react';
 
 interface ResultsViewProps {
@@ -22,10 +24,63 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
 
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
-  const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
+  // All teams expanded by default - no state needed
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Generate PDF from content
+  const handleDownloadPdf = async () => {
+    if (!contentRef.current) return;
+
+    setGeneratingPdf(true);
+
+    try {
+      const content = contentRef.current;
+
+      // Capture the content as canvas
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#050505',
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if needed
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Download the PDF
+      const date = new Date().toISOString().split('T')[0];
+      pdf.save(`Strategic-Positioning-Results-${date}.pdf`);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      alert('PDF 생성에 실패했습니다.');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   // Sort players by score
   const rankedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
@@ -142,11 +197,27 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
           <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
             Strategic Positioning 결과 분석
           </h1>
-          <div className="w-32" /> {/* Spacer */}
+          <button
+            onClick={handleDownloadPdf}
+            disabled={generatingPdf}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 rounded-lg font-semibold text-sm text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {generatingPdf ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                PDF 생성 중...
+              </>
+            ) : (
+              <>
+                <FileDown size={16} />
+                PDF 다운로드
+              </>
+            )}
+          </button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-12">
+      <main ref={contentRef} className="max-w-6xl mx-auto px-6 py-8 space-y-12">
 
         {/* Winner Section */}
         <section className="relative">
@@ -304,17 +375,13 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
             {rankedPlayers.map((player, rank) => {
               const colorTheme = TEAM_COLORS[player.colorIdx % TEAM_COLORS.length];
               const sequences = findSequences(player.cards);
-              const isExpanded = expandedTeam === rank;
 
               return (
                 <div
                   key={player.id}
                   className={`rounded-xl border p-4 transition-all ${getRankStyle(rank)}`}
                 >
-                  <div
-                    className="flex items-center gap-4 cursor-pointer"
-                    onClick={() => setExpandedTeam(isExpanded ? null : rank)}
-                  >
+                  <div className="flex items-center gap-4">
                     <div className="w-10 h-10 flex items-center justify-center">
                       {getRankIcon(rank)}
                     </div>
@@ -336,34 +403,29 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
                       </p>
                       <p className="text-xs text-zinc-500">최종 점수</p>
                     </div>
-
-                    <div className="text-zinc-500">
-                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                    </div>
                   </div>
 
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
-                      <div className="bg-black/30 rounded-lg p-3">
-                        <p className="text-xs text-zinc-500 mb-1">보유 자원</p>
-                        <p className="text-xl font-bold text-emerald-400">{player.chips}억</p>
-                      </div>
-                      <div className="bg-black/30 rounded-lg p-3">
-                        <p className="text-xs text-zinc-500 mb-1">보유 프로젝트</p>
-                        <p className="text-sm font-mono text-zinc-300">
-                          {player.cards.length > 0 ? player.cards.join(', ') : '없음'}
-                        </p>
-                      </div>
-                      <div className="bg-black/30 rounded-lg p-3">
-                        <p className="text-xs text-zinc-500 mb-1">연속 시퀀스</p>
-                        <p className="text-sm font-mono text-purple-400">
-                          {sequences.length > 0
-                            ? sequences.map(s => `[${s.join(',')}]`).join(' ')
-                            : '없음'}
-                        </p>
-                      </div>
+                  {/* Always show team details */}
+                  <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
+                    <div className="bg-black/30 rounded-lg p-3">
+                      <p className="text-xs text-zinc-500 mb-1">보유 자원</p>
+                      <p className="text-xl font-bold text-emerald-400">{player.chips}억</p>
                     </div>
-                  )}
+                    <div className="bg-black/30 rounded-lg p-3">
+                      <p className="text-xs text-zinc-500 mb-1">보유 프로젝트</p>
+                      <p className="text-sm font-mono text-zinc-300">
+                        {player.cards.length > 0 ? player.cards.sort((a,b)=>a-b).join(', ') : '없음'}
+                      </p>
+                    </div>
+                    <div className="bg-black/30 rounded-lg p-3">
+                      <p className="text-xs text-zinc-500 mb-1">연속 시퀀스</p>
+                      <p className="text-sm font-mono text-purple-400">
+                        {sequences.length > 0
+                          ? sequences.map(s => `[${s.join(',')}]`).join(' ')
+                          : '없음'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               );
             })}
