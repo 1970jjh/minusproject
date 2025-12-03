@@ -4,7 +4,7 @@ import { CHIP_UNIT } from "../constants";
 
 // Models to use
 const GEMINI_TEXT_MODEL = "gemini-2.0-flash";  // For text analysis/reports
-const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp";  // For image generation (Native Image-to-Image)
+const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";  // For image generation with face preservation
 
 // Get Gemini API client with API key from environment variable
 const getClient = (): GoogleGenAI | null => {
@@ -314,37 +314,38 @@ export const generateWinnerPoster = async (
 
     if (teamPhotoBase64) {
       // Extract base64 data from data URL
-      const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
-      const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
+      const base64Data = teamPhotoBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, '');
+      const mimeMatch = teamPhotoBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-      imagePrompt = `Transform this team photo into an epic Olympic-style victory celebration poster!
+      imagePrompt = `Transform this image into a celebration of an Olympic team victory.
 
-Create a realistic photo of these team members celebrating like Olympic gold medalists:
-- Keep all the original team members' faces exactly as they are in the photo
-- Transform them into a victory celebration scene
-- Everyone wearing shiny gold medals around their necks
-- The team holding up a grand championship trophy together
-- Confetti and golden streamers falling in the background
-- Stadium or award ceremony setting with dramatic lighting
-- Expressions of pure joy and triumph
-- Realistic photographic style (not cartoon or illustration)
+Requirements:
+1. Keep the same people, faces, and approximate positions as the original image.
+2. The people must be wearing heavy Olympic gold medals around their necks on ribbons.
+3. The group should be collectively holding up a large, shiny gold championship trophy.
+4. Their expressions should be modified to be cheering, shouting with joy, and ecstatic if they aren't already.
+5. Change their clothing to look like matching team athletic tracksuits or jerseys.
+6. The background should be a blurred Olympic stadium filled with cheering crowds or a winner's podium with confetti.
+7. The style should be photorealistic and high quality.
+8. Lighting should be dramatic and golden, like a victory ceremony.
+9. Add text "TEAM ${winner.colorIdx + 1} CHAMPIONS" at the top in golden metallic text.
+10. Add text "${Math.abs(winner.score)} BILLION" and "STRATEGIC POSITIONING MASTERS" at the bottom.`;
 
-Text overlay:
-- Top: "TEAM ${winner.colorIdx + 1} CHAMPIONS" in bold golden metallic text
-- Bottom: "STRATEGIC POSITIONING MASTERS" in elegant white text
-- Score: "${Math.abs(winner.score)} BILLION" displayed prominently
-
-Style: Realistic, cinematic, celebratory, like an official Olympic victory photo`;
-
-      contents = [
-        {
-          inlineData: {
-            mimeType: mimeType,
-            data: base64Data
-          }
-        },
-        { text: imagePrompt }
-      ];
+      // Use parts array structure for image input
+      contents = {
+        parts: [
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType,
+            },
+          },
+          {
+            text: imagePrompt,
+          },
+        ],
+      };
     } else {
       // No team photo provided - generate without reference
       imagePrompt = `Create an epic Olympic-style victory celebration poster!
@@ -369,13 +370,10 @@ Style: Celebratory, triumphant, like an official Olympic ceremony poster`;
       contents = imagePrompt;
     }
 
-    // Use Gemini experimental model for image generation
+    // Use Gemini image model for image generation
     const response = await ai.models.generateContent({
       model: GEMINI_IMAGE_MODEL,
       contents: contents,
-      config: {
-        responseModalities: ["image", "text"],
-      }
     });
 
     // Extract image from response
