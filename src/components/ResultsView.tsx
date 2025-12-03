@@ -306,8 +306,8 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
             {/* Generation Controls */}
             <div className="space-y-4">
               <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-gray-600'}`}>
-                AI가 "Project Leaders" 스타일의 우승팀 포스터를 자동으로 생성합니다.
-                단체사진을 업로드하면 모든 팀원의 얼굴이 중심이 되는 전문적인 포스터를 만들 수 있습니다.
+                AI가 올림픽 금메달 팀처럼 우승의 기쁨을 만끽하는 포스터를 생성합니다.
+                단체사진을 업로드하면 팀원들이 금메달을 목에 걸고 트로피를 들어올리는 우승 포스터를 만들 수 있습니다.
               </p>
 
               {/* Team Photo Upload */}
