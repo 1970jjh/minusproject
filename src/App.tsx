@@ -96,6 +96,14 @@ const App: React.FC = () => {
     setRole('NONE');
     setCurrentRoomId(null);
     setAdminViewingPlayerId(null);
+    // Admin stays authenticated even after exiting a room
+  };
+
+  // Admin enters an existing room as admin (not as player)
+  const handleEnterRoomAsAdmin = (roomId: string) => {
+    setCurrentRoomId(roomId);
+    setRole('ADMIN');
+    setAdminViewingPlayerId(null);
   };
 
   const handleStartGame = async () => {
@@ -180,6 +188,7 @@ const App: React.FC = () => {
       <LandingPage
         onJoinAsAdmin={handleCreateGame}
         onJoinAsPlayer={handleJoinAsPlayer}
+        onEnterRoomAsAdmin={handleEnterRoomAsAdmin}
         isAdminAuthenticated={isAdminAuthenticated}
         onAdminLoginSuccess={handleAdminAuthSuccess}
       />

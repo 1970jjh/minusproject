@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Lock, LogIn, Monitor, RefreshCw, Hexagon, X, Loader2 } from 'lucide-react';
+import { Users, Lock, LogIn, Monitor, Hexagon, X, Loader2, Trash2, Eye } from 'lucide-react';
 import { TEAM_COLORS, MAX_PLAYERS, MIN_PLAYERS } from '../constants';
 import { GameConfig } from '../types';
-import { subscribeToRooms, Room } from '../services/roomService';
+import { subscribeToRooms, Room, deleteRoom } from '../services/roomService';
 
 interface LandingPageProps {
   onJoinAsAdmin: (config: GameConfig) => void;
   onJoinAsPlayer: (name: string, colorIdx: number, roomId: string) => void;
+  onEnterRoomAsAdmin: (roomId: string) => void;
   isAdminAuthenticated: boolean;
   onAdminLoginSuccess: () => void;
 }
@@ -14,6 +15,7 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({
   onJoinAsAdmin,
   onJoinAsPlayer,
+  onEnterRoomAsAdmin,
   isAdminAuthenticated,
   onAdminLoginSuccess
 }) => {
@@ -118,12 +120,17 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex justify-center mb-4">
             <Hexagon size={48} className="text-cyan-400 fill-cyan-900/20" strokeWidth={1.5} />
           </div>
-          <h2 className="text-sm font-bold text-zinc-500 tracking-[0.2em] uppercase mb-1">JJ CREATIVE 교육연구소</h2>
-          <h1 className="text-4xl font-black text-white leading-tight">
-            AI <span className="text-zinc-600 text-2xl align-middle mx-1">vs</span> <span className="text-cyan-400">집단지성</span>
+          <p className="text-[10px] text-zinc-500 font-mono mb-3 tracking-[0.3em] uppercase">
+            JJ Creative Lab Presents
+          </p>
+          <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 leading-tight tracking-tight">
+            STRATEGIC
           </h1>
-          <p className="text-[10px] text-cyan-600 font-mono mt-2 tracking-widest uppercase">
-            Collective Intelligence Challenge
+          <h1 className="text-4xl md:text-5xl font-black text-white leading-tight tracking-tight -mt-1">
+            POSITIONING
+          </h1>
+          <p className="text-[10px] text-cyan-500/80 font-mono mt-3 tracking-[0.2em] uppercase">
+            The Art of Calculated Risk
           </p>
         </div>
 
@@ -190,20 +197,45 @@ const LandingPage: React.FC<LandingPageProps> = ({
                               {room.status === 'waiting' ? 'Lobby Open' : room.status === 'playing' ? 'In Progress' : 'Ended'}
                             </p>
                           </div>
-                          {getStatusBadge(room.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(room.status)}
+                            {isAdminAuthenticated && (
+                              <button
+                                onClick={async () => {
+                                  if (confirm('이 방을 삭제하시겠습니까?')) {
+                                    await deleteRoom(room.id);
+                                  }
+                                }}
+                                className="p-1.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                                title="방 삭제"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         {room.status !== 'finished' && (
-                          <button
-                            onClick={() => handleSelectRoom(room)}
-                            disabled={room.playerCount >= room.config.maxTeams}
-                            className={`w-full py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 ${
-                              room.playerCount >= room.config.maxTeams
-                                ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
-                                : 'bg-zinc-800 hover:bg-zinc-700 hover:text-cyan-400 text-zinc-300 border-zinc-700'
-                            }`}
-                          >
-                            {room.playerCount >= room.config.maxTeams ? 'ROOM FULL' : 'ENTER ROOM'}
-                          </button>
+                          <div className="flex gap-2">
+                            {isAdminAuthenticated && (
+                              <button
+                                onClick={() => onEnterRoomAsAdmin(room.id)}
+                                className="flex-1 py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 bg-cyan-900/30 hover:bg-cyan-800/50 text-cyan-400 border-cyan-700/50"
+                              >
+                                <Eye size={14} /> 관리자
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleSelectRoom(room)}
+                              disabled={room.playerCount >= room.config.maxTeams}
+                              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 ${
+                                room.playerCount >= room.config.maxTeams
+                                  ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
+                                  : 'bg-zinc-800 hover:bg-zinc-700 hover:text-purple-400 text-zinc-300 border-zinc-700'
+                              }`}
+                            >
+                              {room.playerCount >= room.config.maxTeams ? 'FULL' : '참가하기'}
+                            </button>
+                          </div>
                         )}
                       </div>
                     ))
