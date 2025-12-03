@@ -168,12 +168,186 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
     };
   };
 
+  // Digital City Skyline SVG Component
+  const CitySkyline = () => (
+    <div className="absolute bottom-0 left-0 right-0 h-80 pointer-events-none z-0 overflow-hidden opacity-20">
+      {/* Gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/30 via-transparent to-transparent"></div>
+
+      {/* Main skyline */}
+      <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1920 400" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          {/* Glow filter for windows */}
+          <filter id="windowGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          {/* Building gradient */}
+          <linearGradient id="buildingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.8"/>
+            <stop offset="100%" stopColor="#0f0a1e" stopOpacity="0.9"/>
+          </linearGradient>
+        </defs>
+
+        {/* Back layer buildings (furthest) */}
+        <g fill="url(#buildingGrad)" opacity="0.4">
+          <rect x="0" y="200" width="60" height="200"/>
+          <rect x="70" y="150" width="45" height="250"/>
+          <rect x="125" y="180" width="55" height="220"/>
+          <rect x="190" y="120" width="40" height="280"/>
+          <rect x="240" y="160" width="70" height="240"/>
+          <rect x="320" y="100" width="50" height="300"/>
+          <rect x="380" y="140" width="65" height="260"/>
+          <rect x="455" y="80" width="55" height="320"/>
+          <rect x="520" y="130" width="45" height="270"/>
+          <rect x="575" y="170" width="60" height="230"/>
+          <rect x="645" y="90" width="50" height="310"/>
+          <rect x="705" y="150" width="40" height="250"/>
+          <rect x="755" y="110" width="70" height="290"/>
+          <rect x="835" y="160" width="55" height="240"/>
+          <rect x="900" y="70" width="45" height="330"/>
+          <rect x="955" y="130" width="60" height="270"/>
+          <rect x="1025" y="100" width="50" height="300"/>
+          <rect x="1085" y="150" width="65" height="250"/>
+          <rect x="1160" y="80" width="55" height="320"/>
+          <rect x="1225" y="140" width="45" height="260"/>
+          <rect x="1280" y="170" width="70" height="230"/>
+          <rect x="1360" y="60" width="50" height="340"/>
+          <rect x="1420" y="120" width="60" height="280"/>
+          <rect x="1490" y="160" width="55" height="240"/>
+          <rect x="1555" y="90" width="45" height="310"/>
+          <rect x="1610" y="140" width="70" height="260"/>
+          <rect x="1690" y="110" width="50" height="290"/>
+          <rect x="1750" y="170" width="60" height="230"/>
+          <rect x="1820" y="130" width="55" height="270"/>
+          <rect x="1885" y="150" width="35" height="250"/>
+        </g>
+
+        {/* Middle layer buildings */}
+        <g fill="#0c0a1d" opacity="0.6">
+          <rect x="30" y="220" width="80" height="180"/>
+          <rect x="140" y="170" width="60" height="230"/>
+          <rect x="230" y="200" width="90" height="200"/>
+          <rect x="350" y="140" width="70" height="260"/>
+          <rect x="450" y="180" width="85" height="220"/>
+          <rect x="570" y="120" width="60" height="280"/>
+          <rect x="660" y="160" width="75" height="240"/>
+          <rect x="770" y="100" width="55" height="300"/>
+          <rect x="860" y="150" width="80" height="250"/>
+          <rect x="970" y="130" width="65" height="270"/>
+          <rect x="1070" y="170" width="90" height="230"/>
+          <rect x="1190" y="110" width="70" height="290"/>
+          <rect x="1290" y="150" width="60" height="250"/>
+          <rect x="1380" y="90" width="85" height="310"/>
+          <rect x="1500" y="140" width="75" height="260"/>
+          <rect x="1610" y="180" width="55" height="220"/>
+          <rect x="1700" y="120" width="80" height="280"/>
+          <rect x="1810" y="160" width="65" height="240"/>
+        </g>
+
+        {/* Front layer buildings (closest) */}
+        <g fill="#050208" opacity="0.8">
+          <rect x="10" y="250" width="100" height="150"/>
+          <rect x="150" y="220" width="70" height="180"/>
+          <rect x="260" y="240" width="110" height="160"/>
+          <rect x="410" y="200" width="80" height="200"/>
+          <rect x="530" y="230" width="95" height="170"/>
+          <rect x="670" y="190" width="70" height="210"/>
+          <rect x="780" y="220" width="100" height="180"/>
+          <rect x="920" y="210" width="85" height="190"/>
+          <rect x="1050" y="230" width="75" height="170"/>
+          <rect x="1170" y="200" width="90" height="200"/>
+          <rect x="1300" y="220" width="80" height="180"/>
+          <rect x="1420" y="190" width="100" height="210"/>
+          <rect x="1560" y="230" width="70" height="170"/>
+          <rect x="1670" y="210" width="95" height="190"/>
+          <rect x="1800" y="240" width="80" height="160"/>
+        </g>
+
+        {/* Windows - glowing dots */}
+        <g fill="#818cf8" filter="url(#windowGlow)" opacity="0.8">
+          {/* Randomly placed windows */}
+          <rect x="85" y="170" width="3" height="3"/>
+          <rect x="95" y="180" width="3" height="3"/>
+          <rect x="85" y="200" width="3" height="3"/>
+          <rect x="345" y="120" width="3" height="3"/>
+          <rect x="355" y="145" width="3" height="3"/>
+          <rect x="345" y="170" width="3" height="3"/>
+          <rect x="475" y="100" width="3" height="3"/>
+          <rect x="485" y="130" width="3" height="3"/>
+          <rect x="495" y="110" width="3" height="3"/>
+          <rect x="665" y="110" width="3" height="3"/>
+          <rect x="675" y="140" width="3" height="3"/>
+          <rect x="685" y="125" width="3" height="3"/>
+          <rect x="785" y="130" width="3" height="3"/>
+          <rect x="795" y="160" width="3" height="3"/>
+          <rect x="805" y="145" width="3" height="3"/>
+          <rect x="920" y="90" width="3" height="3"/>
+          <rect x="930" y="120" width="3" height="3"/>
+          <rect x="920" y="150" width="3" height="3"/>
+          <rect x="1180" y="100" width="3" height="3"/>
+          <rect x="1190" y="130" width="3" height="3"/>
+          <rect x="1200" y="115" width="3" height="3"/>
+          <rect x="1380" y="80" width="3" height="3"/>
+          <rect x="1390" y="110" width="3" height="3"/>
+          <rect x="1380" y="140" width="3" height="3"/>
+          <rect x="1580" y="110" width="3" height="3"/>
+          <rect x="1590" y="140" width="3" height="3"/>
+          <rect x="1580" y="170" width="3" height="3"/>
+        </g>
+
+        {/* Cyan accent windows */}
+        <g fill="#22d3ee" filter="url(#windowGlow)" opacity="0.6">
+          <rect x="165" y="190" width="3" height="3"/>
+          <rect x="275" y="165" width="3" height="3"/>
+          <rect x="395" y="155" width="3" height="3"/>
+          <rect x="590" y="135" width="3" height="3"/>
+          <rect x="735" y="125" width="3" height="3"/>
+          <rect x="875" y="165" width="3" height="3"/>
+          <rect x="1045" y="145" width="3" height="3"/>
+          <rect x="1265" y="135" width="3" height="3"/>
+          <rect x="1445" y="105" width="3" height="3"/>
+          <rect x="1635" y="155" width="3" height="3"/>
+          <rect x="1835" y="145" width="3" height="3"/>
+        </g>
+
+        {/* Pink accent windows */}
+        <g fill="#f472b6" filter="url(#windowGlow)" opacity="0.5">
+          <rect x="55" y="215" width="3" height="3"/>
+          <rect x="215" y="135" width="3" height="3"/>
+          <rect x="505" y="145" width="3" height="3"/>
+          <rect x="625" y="185" width="3" height="3"/>
+          <rect x="820" y="115" width="3" height="3"/>
+          <rect x="985" y="150" width="3" height="3"/>
+          <rect x="1115" y="185" width="3" height="3"/>
+          <rect x="1335" y="175" width="3" height="3"/>
+          <rect x="1545" y="125" width="3" height="3"/>
+          <rect x="1730" y="135" width="3" height="3"/>
+        </g>
+      </svg>
+
+      {/* Subtle reflection effect at very bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-indigo-500/5 to-transparent"></div>
+
+      {/* Animated scan line effect */}
+      <div className="absolute bottom-0 left-0 right-0 h-full overflow-hidden">
+        <div className="absolute w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent animate-float" style={{ bottom: '20%' }}></div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-screen w-screen bg-[#0a0a0f] text-gray-100 flex flex-col relative overflow-hidden font-sans select-none">
 
       {/* Background Effects */}
       <div className="absolute inset-0 tech-grid pointer-events-none z-0"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08)_0%,rgba(0,0,0,0.9)_70%)] pointer-events-none z-0"></div>
+
+      {/* Digital City Skyline Background */}
+      <CitySkyline />
 
       {/* Animated corner accents */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
