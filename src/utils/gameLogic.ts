@@ -72,7 +72,9 @@ export const createInitialGameState = (
     currentPlayerIndex: Math.floor(Math.random() * (resetPlayers.length || 1)),
     phase: GamePhase.PLAYING,
     logs: [{ turn: 0, message: "게임이 시작되었습니다! -26억 ~ -50억 프로젝트 경매가 진행됩니다." }],
-    turnCount: 1
+    turnCount: 1,
+    lastPassedPlayerIndex: null,
+    aiAdviceUsage: {}
   };
 };
 
@@ -108,6 +110,7 @@ export const processTurn = (
     state.pot = (state.pot || 0) + 1;
 
     state.players[playerIndex] = player;
+    state.lastPassedPlayerIndex = playerIndex; // Track who just passed
     state.currentPlayerIndex = (playerIndex + 1) % players.length;
 
     newLog = { turn: state.turnCount || 1, message: `${logMessagePrefix}이(가) PASS 했습니다. (자원 -1${CHIP_UNIT})` };
@@ -116,12 +119,13 @@ export const processTurn = (
     player.chips += state.pot || 0;
     player.cards = [...player.cards, state.currentCard!].sort((a, b) => a - b);
     player.score = calculateScore(player);
-    
+
     state.pot = 0;
     state.players[playerIndex] = player;
-    
+    state.lastPassedPlayerIndex = null; // Clear PASS indicator when someone takes
+
     const takenCard = state.currentCard;
-    
+
     // Deal next card or End Game
     if (state.deck.length > 0) {
       state.currentCard = state.deck.pop() || null;

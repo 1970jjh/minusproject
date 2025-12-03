@@ -231,3 +231,51 @@ export const getRoom = async (roomId: string): Promise<Room | null> => {
     playerCount: data.gameState?.players?.length || 0
   };
 };
+
+// Update AI advice usage for a team
+export const MAX_AI_ADVICE_PER_TEAM = 5;
+
+export const updateAiAdviceUsage = async (roomId: string, teamId: string): Promise<{ success: boolean; currentUsage: number }> => {
+  const roomRef = ref(database, `rooms/${roomId}`);
+  const snapshot = await get(roomRef);
+
+  if (!snapshot.exists()) {
+    return { success: false, currentUsage: 0 };
+  }
+
+  const roomData = snapshot.val();
+  const gameState: GameState = roomData.gameState || {};
+  const currentUsage = gameState.aiAdviceUsage || {};
+  const teamUsage = currentUsage[teamId] || 0;
+
+  if (teamUsage >= MAX_AI_ADVICE_PER_TEAM) {
+    return { success: false, currentUsage: teamUsage };
+  }
+
+  const newUsage = teamUsage + 1;
+  const updatedAiAdviceUsage = {
+    ...currentUsage,
+    [teamId]: newUsage
+  };
+
+  await update(ref(database, `rooms/${roomId}/gameState`), {
+    aiAdviceUsage: updatedAiAdviceUsage
+  });
+
+  return { success: true, currentUsage: newUsage };
+};
+
+// Get AI advice usage for a team
+export const getAiAdviceUsage = async (roomId: string, teamId: string): Promise<number> => {
+  const roomRef = ref(database, `rooms/${roomId}`);
+  const snapshot = await get(roomRef);
+
+  if (!snapshot.exists()) {
+    return 0;
+  }
+
+  const roomData = snapshot.val();
+  const gameState: GameState = roomData.gameState || {};
+  const currentUsage = gameState.aiAdviceUsage || {};
+  return currentUsage[teamId] || 0;
+};

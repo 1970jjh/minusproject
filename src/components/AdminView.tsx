@@ -237,11 +237,12 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                     className="absolute w-64 z-30 transition-all duration-500"
                     style={getPlayerPosition(index, players.length)}
                 >
-                    <PlayerBoard 
-                        player={player} 
-                        isActive={gameState.phase === GamePhase.PLAYING && currentPlayer?.id === player.id} 
-                        isWinner={winner?.id === player.id} 
-                        onView={() => onViewPlayer(player.id)} 
+                    <PlayerBoard
+                        player={player}
+                        isActive={gameState.phase === GamePhase.PLAYING && currentPlayer?.id === player.id}
+                        isWinner={winner?.id === player.id}
+                        showPass={gameState.lastPassedPlayerIndex === index && gameState.phase === GamePhase.PLAYING}
+                        onView={() => onViewPlayer(player.id)}
                     />
                 </div>
             ))}

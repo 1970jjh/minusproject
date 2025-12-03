@@ -3,18 +3,20 @@ import { GameState, GamePhase, Player } from '../types';
 import { CHIP_UNIT, TEAM_COLORS } from '../constants';
 import Chip from './Chip';
 import { getStrategicAdvice } from '../services/geminiService';
+import { updateAiAdviceUsage, MAX_AI_ADVICE_PER_TEAM } from '../services/roomService';
 import { playVoiceEffect, initializeSpeech } from '../services/soundService';
 import { Cpu, XCircle, CheckCircle, Home, Loader2, LogOut, Eye } from 'lucide-react';
 
 interface PlayerViewProps {
   gameState: GameState;
   playerId: string;
+  roomId: string | null;
   onAction: (action: 'pass' | 'take') => void;
   isAdmin?: boolean;
   onReturnToAdmin?: () => void;
 }
 
-const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, isAdmin, onReturnToAdmin }) => {
+const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, onAction, isAdmin, onReturnToAdmin }) => {
   const [advice, setAdvice] = useState<string | null>(null);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [showAdviceModal, setShowAdviceModal] = useState(false);
@@ -77,9 +79,29 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
   const isMyTurn = players[gameState.currentPlayerIndex]?.id === playerId && gameState.phase === GamePhase.PLAYING;
   const colorTheme = TEAM_COLORS[me.colorIdx % TEAM_COLORS.length];
 
+  // Get current AI advice usage for this team
+  const currentAiUsage = gameState.aiAdviceUsage?.[playerId] || 0;
+  const remainingAdvice = MAX_AI_ADVICE_PER_TEAM - currentAiUsage;
+  const canUseAdvice = remainingAdvice > 0;
+
   const handleGetAdvice = async () => {
+    if (!roomId || !canUseAdvice) {
+      setShowAdviceModal(true);
+      setAdvice(`AI 조언 사용 횟수를 모두 소진했습니다. (${currentAiUsage}/${MAX_AI_ADVICE_PER_TEAM})`);
+      return;
+    }
+
     setLoadingAdvice(true);
     setShowAdviceModal(true);
+
+    // Update usage in Firebase first
+    const usageResult = await updateAiAdviceUsage(roomId, playerId);
+    if (!usageResult.success) {
+      setAdvice(`AI 조언 사용 횟수를 모두 소진했습니다. (${usageResult.currentUsage}/${MAX_AI_ADVICE_PER_TEAM})`);
+      setLoadingAdvice(false);
+      return;
+    }
+
     const result = await getStrategicAdvice(gameState, playerId);
     setAdvice(result);
     setLoadingAdvice(false);
@@ -264,9 +286,17 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
                 </div>
                 <button
                   onClick={handleGetAdvice}
-                  className="w-full py-4 bg-indigo-600/10 text-indigo-400 border border-indigo-500/30 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-600/20 transition-colors"
+                  disabled={!canUseAdvice}
+                  className={`w-full py-4 border rounded-xl font-bold flex items-center justify-center gap-2 transition-colors
+                    ${canUseAdvice
+                      ? 'bg-indigo-600/10 text-indigo-400 border-indigo-500/30 hover:bg-indigo-600/20'
+                      : 'bg-zinc-800/50 text-zinc-600 border-zinc-700 cursor-not-allowed'}
+                  `}
                 >
                    <Cpu size={20} /> AI 전략 조언 받기
+                   <span className={`ml-2 px-2 py-0.5 rounded text-xs font-mono ${canUseAdvice ? 'bg-indigo-900/50 text-indigo-300' : 'bg-zinc-700 text-zinc-500'}`}>
+                     {currentAiUsage}/{MAX_AI_ADVICE_PER_TEAM}
+                   </span>
                 </button>
              </>
            ) : (
