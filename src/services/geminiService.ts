@@ -318,19 +318,31 @@ export const generateWinnerPoster = async (
       const mimeMatch = teamPhotoBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/);
       const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-      imagePrompt = `Transform this image into a celebration of an Olympic team victory.
+      imagePrompt = `Transform this team photo into a vertical cyberpunk victory poster.
 
-Requirements:
-1. Keep the same people, faces, and approximate positions as the original image.
-2. The people must be wearing heavy Olympic gold medals around their necks on ribbons.
-3. The group should be collectively holding up a large, shiny gold championship trophy.
-4. Their expressions should be modified to be cheering, shouting with joy, and ecstatic if they aren't already.
-5. Change their clothing to look like matching team athletic tracksuits or jerseys.
-6. The background should be a blurred Olympic stadium filled with cheering crowds or a winner's podium with confetti.
-7. The style should be photorealistic and high quality.
-8. Lighting should be dramatic and golden, like a victory ceremony.
-9. Add text "TEAM ${winner.colorIdx + 1} CHAMPIONS" at the top in golden metallic text.
-10. Add text "${Math.abs(winner.score)} BILLION" and "STRATEGIC POSITIONING MASTERS" at the bottom.`;
+CRITICAL - PRESERVE ORIGINAL:
+1. Keep every person's face EXACTLY as in the original photo - do not change facial features
+2. Keep body shapes and poses as close to original as possible
+3. Maintain the same number of people and their relative positions
+
+STYLE TRANSFORMATION:
+1. Create a VERTICAL/PORTRAIT oriented poster
+2. Replace background with futuristic digital cybernetic environment:
+   - Neon grid lines and holographic displays
+   - Digital matrix/data streams flowing in background
+   - Glowing cyan, purple, and blue neon lights
+   - Circuit board patterns and tech elements
+   - Holographic UI elements floating around
+3. Add subtle cyberpunk lighting effects on the people (neon rim lights)
+4. Keep people looking realistic, only enhance with cyber lighting
+
+TEXT OVERLAY:
+- Top: "TEAM ${winner.colorIdx + 1}" in large glowing cyan neon text
+- Middle/Center area: "CHAMPIONS" in bold holographic style
+- Bottom: "${Math.abs(winner.score)} BILLION" in digital display font
+- Below that: "STRATEGIC POSITIONING MASTERS" in smaller tech font
+
+Output: Vertical format poster with photorealistic people in digital cyberpunk setting`;
 
       // Use parts array structure for image input
       contents = {
@@ -348,24 +360,26 @@ Requirements:
       };
     } else {
       // No team photo provided - generate without reference
-      imagePrompt = `Create an epic Olympic-style victory celebration poster!
+      imagePrompt = `Create a vertical cyberpunk victory poster.
 
 Design requirements:
-- Championship trophy being held up high
-- Gold medals displayed prominently
-- Confetti and golden streamers in the background
-- Stadium or award ceremony setting with dramatic lighting
-- Silhouettes or abstract representation of a winning team celebrating
-- Realistic, cinematic style
+- VERTICAL/PORTRAIT orientation
+- Futuristic digital cybernetic background:
+  - Neon grid lines and holographic displays
+  - Digital matrix/data streams
+  - Glowing cyan, purple, and blue neon lights
+  - Circuit board patterns
+- Abstract silhouettes of a winning team or championship trophy
+- Holographic UI elements floating around
 
 Text overlay:
-- Top: "TEAM ${winner.colorIdx + 1} CHAMPIONS" in bold golden metallic text
-- Center: Grand trophy with gold medals
-- Bottom: "STRATEGIC POSITIONING MASTERS" in elegant white text
-- Score: "${Math.abs(winner.score)} BILLION"
+- Top: "TEAM ${winner.colorIdx + 1}" in large glowing cyan neon text
+- Center: "CHAMPIONS" in bold holographic style
+- Bottom: "${Math.abs(winner.score)} BILLION" in digital display font
+- Below: "STRATEGIC POSITIONING MASTERS" in tech font
 - Team: "${memberNames}"
 
-Style: Celebratory, triumphant, like an official Olympic ceremony poster`;
+Style: Digital cyberpunk, futuristic, neon-lit victory poster`;
 
       contents = imagePrompt;
     }
