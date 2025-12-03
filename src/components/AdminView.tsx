@@ -58,7 +58,7 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
         {/* Players Grid */}
         <div className="relative z-10 w-full max-w-7xl mb-16">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {players.map(player => {
+            {[...players].sort((a, b) => a.colorIdx - b.colorIdx).map(player => {
                 const members = player.members || [player.name];
                 return (
                   <div key={player.id} className="group relative bg-emerald-900/40 border border-emerald-500/20 p-6 rounded-2xl flex flex-col items-center backdrop-blur-sm transition-all hover:bg-emerald-900/60 hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
