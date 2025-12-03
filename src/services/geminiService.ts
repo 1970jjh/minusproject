@@ -315,32 +315,30 @@ export const generateWinnerPoster = async (
       const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
       const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
 
-      imagePrompt = `Transform this team photo into a cinematic "Market Master" winner poster.
+      imagePrompt = `Transform this team photo into a professional winner poster inspired by HBO's Silicon Valley poster style.
 
-CRITICAL REQUIREMENTS - MUST FOLLOW:
-1. PRESERVE ALL PEOPLE EXACTLY: Keep every person from the original photo with their EXACT faces, poses, positions, expressions, and clothing. Do NOT change, replace, or modify any person.
-2. ONLY CHANGE THE BACKGROUND: Replace the original background with a futuristic cyberpunk cityscape.
-3. The people must remain 100% identical to the original photo - same number of people, same positions, same faces.
+ABSOLUTE REQUIREMENTS:
+1. EVERY SINGLE PERSON in the original photo MUST appear in the final image. Count the people and ensure the EXACT same number appears.
+2. ALL faces must be clearly visible and NOT covered by any text or graphics.
+3. Preserve each person's exact face, expression, pose, and position.
 
-Background style:
-- Futuristic night city skyline with glowing skyscrapers
-- Neon cyan, blue, and purple lighting
-- Holographic displays and digital elements floating in the background
-- Flying vehicles or drones in the distant sky
-- Glass windows reflecting city lights
+Style (like Silicon Valley HBO poster):
+- Clean, simple gradient background (light gray to white, or subtle blue gradient)
+- Focus entirely on the PEOPLE - their faces should be the main visual element
+- Professional, polished look with good lighting on faces
+- Slight vignette effect around edges
 
-Text overlays to add:
-- Top: "TEAM ${winner.colorIdx + 1}" in large bold cyan/blue gradient text
-- Below team number: "TOTAL ASSET: ${Math.abs(winner.score)} BILLION" in smaller text
-- Center/Middle: "MARKET MASTER" as the main title in bold futuristic font
-- Optional: Small holographic UI elements around the edges
+Text placement (MUST NOT cover any person):
+- Top area (above people's heads): "TEAM ${winner.colorIdx + 1}" in bold modern font
+- Very bottom of image (below people): "PROJECT LEADERS" in large bold red or orange text, similar to Silicon Valley logo style
+- Small text below that: "Total Asset: ${Math.abs(winner.score)} Billion"
 
-Color grading:
-- Cool tones (cyan, blue, purple)
-- High contrast with vibrant neon accents
-- Professional cinematic look
+CRITICAL:
+- Text must be positioned in empty space ONLY - never overlapping with any person
+- If the original photo has 7 people, the output MUST have exactly 7 people
+- Every face from the original must be recognizable in the output
 
-The final image should look like the original team photo was taken in front of a futuristic city backdrop, with all team members preserved exactly as they appear in the original.`;
+The final result should look like a professional TV show promotional poster featuring the actual team members.`;
 
       contents = [
         {
@@ -353,27 +351,27 @@ The final image should look like the original team photo was taken in front of a
       ];
     } else {
       // No team photo provided - generate without reference
-      imagePrompt = `Create a cinematic "Market Master" winner poster without specific people.
+      imagePrompt = `Create a professional winner poster in Silicon Valley HBO style without specific people.
 
 Design requirements:
-- Futuristic cyberpunk city background with glowing skyscrapers at night
-- Neon cyan, blue, and purple lighting throughout
-- Holographic displays, charts, and financial data floating in the scene
-- Abstract silhouettes or symbolic representation of victory (trophy, crown, rising graphs)
+- Clean gradient background (light gray to white)
+- Abstract silhouettes of a winning team in professional attire
+- Clean, minimal, professional look
 
-Text overlays:
-- Top: "TEAM ${winner.colorIdx + 1}" in large bold cyan/blue gradient text
-- Below team number: "TOTAL ASSET: ${Math.abs(winner.score)} BILLION" in smaller text
-- Center: "MARKET MASTER" as the main title in bold futuristic font
-- Bottom: "${memberNames}" in elegant white text
+Text layout:
+- Top: "TEAM ${winner.colorIdx + 1}" in bold modern font
+- Center: Abstract representation of teamwork/victory
+- Bottom: "PROJECT LEADERS" in large bold red text (like Silicon Valley logo)
+- Below that: "Total Asset: ${Math.abs(winner.score)} Billion"
+- Team members: "${memberNames}"
 
 Style:
-- Cool tones (cyan, blue, purple) with neon accents
-- High contrast, cinematic color grading
-- Professional, premium quality
-- Mood: triumphant, futuristic, powerful
+- Clean, professional, minimal
+- High contrast
+- Modern corporate aesthetic
+- Mood: professional, triumphant, sophisticated
 
-Make it look like a professional game/competition winner announcement poster.`;
+Make it look like a professional TV show or corporate poster.`;
 
       contents = imagePrompt;
     }
