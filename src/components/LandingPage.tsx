@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Lock, LogIn, Monitor, Hexagon, X, Loader2, Trash2, Eye } from 'lucide-react';
 import { TEAM_COLORS, MAX_PLAYERS, MIN_PLAYERS } from '../constants';
-import { GameConfig } from '../types';
-import { subscribeToRooms, Room, deleteRoom } from '../services/roomService';
+import { GameConfig, Player, MAX_TEAM_MEMBERS } from '../types';
+import { subscribeToRooms, Room, deleteRoom, subscribeToGameState } from '../services/roomService';
 
 interface LandingPageProps {
   onJoinAsAdmin: (config: GameConfig) => void;
@@ -27,6 +27,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [roomTeams, setRoomTeams] = useState<Player[]>([]);
 
   // Login Modal State
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -59,6 +60,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
       setViewState('ADMIN_SETUP');
     }
   }, [activeTab, isAdminAuthenticated, viewState]);
+
+  // Subscribe to selected room's teams when in player form
+  useEffect(() => {
+    if (viewState === 'PLAYER_FORM' && selectedRoom) {
+      const unsubscribe = subscribeToGameState(selectedRoom.id, (gameState) => {
+        if (gameState) {
+          setRoomTeams(gameState.players || []);
+        } else {
+          setRoomTeams([]);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [viewState, selectedRoom]);
 
   const handleSelectRoom = (room: Room) => {
     setSelectedRoom(room);
@@ -312,18 +327,41 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="mb-8">
-              <label className="block text-zinc-400 text-[10px] font-bold uppercase mb-3 tracking-wider">Select Team</label>
-              <div className="grid grid-cols-6 gap-3">
-                {TEAM_COLORS.map((color, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedColor(idx)}
-                    className={`aspect-square rounded-full ${color.bg} border-2 transition-transform flex items-center justify-center font-bold text-white text-sm ${selectedColor === idx ? 'border-white scale-110 ring-2 ring-white/20' : 'border-transparent opacity-50 hover:opacity-80'}`}
-                  >
-                    {idx + 1}
-                  </button>
-                ))}
+              <label className="block text-zinc-400 text-[10px] font-bold uppercase mb-3 tracking-wider">
+                Select Team <span className="text-zinc-600">(최대 {MAX_TEAM_MEMBERS}명/팀)</span>
+              </label>
+              <div className="grid grid-cols-4 gap-3">
+                {TEAM_COLORS.map((color, idx) => {
+                  const team = roomTeams.find(t => t.colorIdx === idx);
+                  const memberCount = team?.members?.length || 0;
+                  const isFull = memberCount >= MAX_TEAM_MEMBERS;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => !isFull && setSelectedColor(idx)}
+                      disabled={isFull}
+                      className={`relative p-3 rounded-xl ${color.bg} border-2 transition-all flex flex-col items-center justify-center gap-1 ${
+                        isFull
+                          ? 'opacity-30 cursor-not-allowed border-transparent'
+                          : selectedColor === idx
+                            ? 'border-white scale-105 ring-2 ring-white/20'
+                            : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <span className="font-black text-white text-lg">팀 {idx + 1}</span>
+                      <span className="text-[10px] text-white/80 font-mono">
+                        {memberCount}/{MAX_TEAM_MEMBERS}명
+                      </span>
+                      {memberCount > 0 && (
+                        <span className="text-[9px] text-white/60 truncate max-w-full">
+                          {team?.members?.slice(0, 2).join(', ')}{(team?.members?.length || 0) > 2 ? '...' : ''}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

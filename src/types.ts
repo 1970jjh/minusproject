@@ -1,12 +1,13 @@
 
 export interface Player {
-  id: string; // socket/channel id
-  name: string;
+  id: string; // team id
+  name: string; // team name (first member's name or custom)
   colorIdx: number;
   chips: number;
   cards: number[]; // These are negative values now, representing projects
-  score: number; 
+  score: number;
   isOnline: boolean;
+  members: string[]; // Array of member names in this team
 }
 
 export enum GamePhase {
@@ -24,6 +25,8 @@ export interface GameConfig {
   roomName: string;
   maxTeams: number;
 }
+
+export const MAX_TEAM_MEMBERS = 20;
 
 export interface GameState {
   config: GameConfig;

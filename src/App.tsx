@@ -38,12 +38,13 @@ const App: React.FC = () => {
 
     const unsubscribe = subscribeToGameState(currentRoomId, (newGameState) => {
       if (newGameState) {
-        // Ensure each player has valid cards array (Firebase converts empty arrays to null)
+        // Ensure each player has valid arrays (Firebase converts empty arrays to null)
         const safePlayers = (newGameState.players || []).map((p: any) => ({
           ...p,
           cards: p.cards || [],
           chips: p.chips ?? 0,
           score: p.score ?? 0,
+          members: p.members || [p.name],
         }));
 
         // Ensure gameState always has valid structure

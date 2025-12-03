@@ -11,7 +11,7 @@ import {
   DatabaseReference
 } from 'firebase/database';
 import { database } from '../config/firebase';
-import { GameState, GamePhase, Player, GameConfig } from '../types';
+import { GameState, GamePhase, Player, GameConfig, MAX_TEAM_MEMBERS } from '../types';
 import { createInitialGameState } from '../utils/gameLogic';
 import { STARTING_CHIPS } from '../constants';
 
@@ -79,7 +79,7 @@ export const subscribeToRooms = (callback: (rooms: Room[]) => void): (() => void
   return () => off(roomsRef);
 };
 
-// Join a room as a player
+// Join a room as a player (join existing team or create new team)
 export const joinRoom = async (
   roomId: string,
   playerInfo: { id: string; name: string; colorIdx: number }
@@ -97,37 +97,71 @@ export const joinRoom = async (
   const players = gameState.players || [];
   const config = roomData.config || { maxTeams: 6 };
 
-  // Check if room is full
-  if (players.length >= config.maxTeams) {
-    console.error('Room is full');
-    return false;
+  // Find existing team with same colorIdx
+  const existingTeamIndex = players.findIndex((p: Player) => p.colorIdx === playerInfo.colorIdx);
+
+  if (existingTeamIndex >= 0) {
+    // Join existing team
+    const existingTeam = players[existingTeamIndex];
+    const members = existingTeam.members || [existingTeam.name];
+
+    // Check if team is full
+    if (members.length >= MAX_TEAM_MEMBERS) {
+      console.error('Team is full');
+      return false;
+    }
+
+    // Check if member already exists in team
+    if (members.includes(playerInfo.name)) {
+      return true; // Already joined
+    }
+
+    // Add member to existing team
+    const updatedTeam = {
+      ...existingTeam,
+      members: [...members, playerInfo.name]
+    };
+
+    const updatedPlayers = [...players];
+    updatedPlayers[existingTeamIndex] = updatedTeam;
+
+    await update(ref(database, `rooms/${roomId}/gameState`), {
+      players: updatedPlayers,
+      phase: GamePhase.LOBBY
+    });
+
+    return true;
+  } else {
+    // Create new team
+    if (players.length >= config.maxTeams) {
+      console.error('Room is full (max teams reached)');
+      return false;
+    }
+
+    const newTeam: Player = {
+      id: playerInfo.id,
+      name: `팀 ${playerInfo.colorIdx + 1}`,
+      colorIdx: playerInfo.colorIdx,
+      chips: STARTING_CHIPS,
+      cards: [],
+      score: STARTING_CHIPS,
+      isOnline: true,
+      members: [playerInfo.name]
+    };
+
+    const updatedPlayers = [...players, newTeam];
+
+    await update(ref(database, `rooms/${roomId}/gameState`), {
+      players: updatedPlayers,
+      phase: GamePhase.LOBBY
+    });
+
+    await update(ref(database, `rooms/${roomId}`), {
+      playerCount: updatedPlayers.length
+    });
+
+    return true;
   }
-
-  // Check if player already exists
-  if (players.find((p: Player) => p.id === playerInfo.id)) {
-    return true; // Already joined
-  }
-
-  const newPlayer: Player = {
-    ...playerInfo,
-    chips: STARTING_CHIPS,
-    cards: [],
-    score: STARTING_CHIPS,
-    isOnline: true
-  };
-
-  const updatedPlayers = [...players, newPlayer];
-
-  await update(ref(database, `rooms/${roomId}/gameState`), {
-    players: updatedPlayers,
-    phase: GamePhase.LOBBY
-  });
-
-  await update(ref(database, `rooms/${roomId}`), {
-    playerCount: updatedPlayers.length
-  });
-
-  return true;
 };
 
 // Subscribe to game state changes

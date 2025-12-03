@@ -58,24 +58,38 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
         {/* Players Grid */}
         <div className="relative z-10 w-full max-w-7xl mb-16">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {players.map(player => (
-                <div key={player.id} className="group relative bg-emerald-900/40 border border-emerald-500/20 p-6 rounded-2xl flex flex-col items-center backdrop-blur-sm transition-all hover:bg-emerald-900/60 hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                   <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-xl border-4 border-zinc-800 group-hover:scale-110 transition-transform">
-                     <Users size={32} className="text-zinc-400 group-hover:text-white transition-colors" />
-                   </div>
-                   <span className="font-bold text-xl text-white mb-1 tracking-tight">{player.name}</span>
-                   <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider mb-4 border border-emerald-500/20">
-                     Connected
-                   </span>
-                   
-                   <button 
-                     onClick={() => onViewPlayer(player.id)}
-                     className="w-full mt-auto py-3 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-xs font-bold text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all border border-zinc-700 hover:border-zinc-500"
-                   >
-                      <Eye size={14} /> 팀 화면 보기
-                   </button>
-                </div>
-            ))}
+            {players.map(player => {
+                const members = player.members || [player.name];
+                return (
+                  <div key={player.id} className="group relative bg-emerald-900/40 border border-emerald-500/20 p-6 rounded-2xl flex flex-col items-center backdrop-blur-sm transition-all hover:bg-emerald-900/60 hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                     <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3 bg-gradient-to-br from-zinc-800 to-zinc-900 shadow-xl border-4 border-zinc-800 group-hover:scale-110 transition-transform">
+                       <span className="text-2xl font-black text-white">{player.colorIdx + 1}</span>
+                     </div>
+                     <span className="font-bold text-xl text-white mb-1 tracking-tight">{player.name}</span>
+                     <span className="px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-wider mb-2 border border-cyan-500/20">
+                       {members.length}명 참여
+                     </span>
+
+                     {/* Member List */}
+                     <div className="w-full mb-4 max-h-24 overflow-y-auto scrollbar-hide">
+                       <div className="flex flex-wrap gap-1 justify-center">
+                         {members.map((name, idx) => (
+                           <span key={idx} className="px-2 py-0.5 bg-black/30 rounded text-[10px] text-zinc-300">
+                             {name}
+                           </span>
+                         ))}
+                       </div>
+                     </div>
+
+                     <button
+                       onClick={() => onViewPlayer(player.id)}
+                       className="w-full mt-auto py-3 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-xs font-bold text-zinc-400 hover:text-white flex items-center justify-center gap-2 transition-all border border-zinc-700 hover:border-zinc-500"
+                     >
+                        <Eye size={14} /> 팀 화면 보기
+                     </button>
+                  </div>
+                );
+            })}
             {Array.from({ length: Math.max(0, config.maxTeams - players.length) }).map((_, i) => (
                 <div key={`empty-${i}`} className="bg-black/10 border-2 border-dashed border-emerald-500/10 rounded-2xl flex flex-col items-center justify-center min-h-[220px]">
                    <span className="text-emerald-500/20 font-black text-4xl mb-2 opacity-50">{i + 1 + players.length}</span>
