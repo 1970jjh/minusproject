@@ -141,6 +141,20 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
       <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
         <div className="absolute inset-0 tech-grid pointer-events-none"></div>
         <AdminControls />
+
+        {/* Exit Button (for non-admin players) */}
+        {!isAdmin && (
+          <button
+            onClick={() => {
+              localStorage.removeItem('playerSession');
+              window.location.reload();
+            }}
+            className="absolute top-4 right-4 z-50 glass hover:bg-white/10 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all"
+          >
+            <LogOut size={14} /> 나가기
+          </button>
+        )}
+
         <div className="relative z-10 flex flex-col items-center">
           <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mb-6 animate-pulse shadow-lg">
              <Loader2 size={32} className="text-white animate-spin" />
