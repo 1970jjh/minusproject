@@ -306,8 +306,8 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
             {/* Generation Controls */}
             <div className="space-y-4">
               <p className={`text-sm ${isDark ? 'text-zinc-400' : 'text-gray-600'}`}>
-                AI가 넷플릭스 드라마 "카지노" 스타일의 우승팀 포스터를 자동으로 생성합니다.
-                단체사진을 업로드하면 팀원들의 모습을 반영한 포스터를 만들 수 있습니다.
+                AI가 "Market Master" 스타일의 우승팀 포스터를 자동으로 생성합니다.
+                단체사진을 업로드하면 팀원들의 모습을 그대로 유지한 채 미래적인 배경의 포스터를 만들 수 있습니다.
               </p>
 
               {/* Team Photo Upload */}
@@ -336,10 +336,10 @@ const ResultsView: React.FC<ResultsViewProps> = ({ gameState, onBack }) => {
                 </button>
                 {teamPhoto && (
                   <div className="relative">
-                    <img src={teamPhoto} alt="Team photo" className="w-full h-32 object-cover rounded-lg" />
+                    <img src={teamPhoto} alt="Team photo" className="w-full max-h-48 object-contain rounded-lg" />
                     <button
                       onClick={() => setTeamPhoto(null)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full text-xs"
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs font-bold transition-colors"
                     >
                       ✕
                     </button>
