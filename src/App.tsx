@@ -4,6 +4,7 @@ import { createInitialGameState, processTurn } from './utils/gameLogic';
 import AdminView from './components/AdminView';
 import PlayerView from './components/PlayerView';
 import LandingPage from './components/LandingPage';
+import ResultsView from './components/ResultsView';
 import Modal from './components/Modal';
 import { BookOpen } from 'lucide-react';
 import {
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   // State is shared via Firebase
   const [gameState, setGameState] = useState<GameState>(createInitialGameState([]));
   const [showRules, setShowRules] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   // Subscribe to game state changes when in a room
   useEffect(() => {
@@ -201,7 +203,12 @@ const App: React.FC = () => {
   return (
     <>
       {role === 'ADMIN' && (
-        adminViewingPlayerId ? (
+        showResults ? (
+          <ResultsView
+            gameState={gameState}
+            onBack={() => setShowResults(false)}
+          />
+        ) : adminViewingPlayerId ? (
           <PlayerView
             gameState={gameState}
             playerId={adminViewingPlayerId}
@@ -217,6 +224,7 @@ const App: React.FC = () => {
             onReset={handleResetGame}
             onViewPlayer={(id) => setAdminViewingPlayerId(id)}
             onExit={handleAdminExit}
+            onShowResults={() => setShowResults(true)}
           />
         )
       )}

@@ -96,3 +96,230 @@ export const getStrategicAdvice = async (gameState: GameState, myPlayerId: strin
     return "현재 전략을 분석할 수 없습니다. 잠시 후 다시 시도해주세요.";
   }
 };
+
+// Generate comprehensive game analysis for results page
+export const generateGameAnalysis = async (gameState: GameState): Promise<string> => {
+  try {
+    const apiKey = gameState.config?.geminiApiKey;
+    const ai = getClient(apiKey);
+    if (!ai) {
+      return "API 키가 설정되지 않았습니다. 관리자에게 문의하세요.";
+    }
+
+    // Sort players by score to determine rankings
+    const rankedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+    const winner = rankedPlayers[0];
+
+    // Build detailed team info
+    const teamsInfo = rankedPlayers.map((p, rank) => {
+      const sequences = findSequences(p.cards);
+      return `${rank + 1}위 - ${p.colorIdx + 1}팀 (${p.members?.join(', ') || p.name}):
+  - 최종 점수: ${p.score}억
+  - 보유 자원: ${p.chips}억
+  - 보유 프로젝트: [${p.cards.join(', ') || '없음'}]
+  - 연속 시퀀스: ${sequences.length > 0 ? sequences.map(s => `[${s.join(', ')}]`).join(', ') : '없음'}`;
+    }).join('\n\n');
+
+    // Build game log summary
+    const logSummary = gameState.logs
+      .filter(log => log.message.includes('PASS') || log.message.includes('낙찰'))
+      .slice(-20)
+      .map(log => `Turn ${log.turn}: ${log.message}`)
+      .join('\n');
+
+    const prompt = `
+당신은 경영전략 전문가이자 게임 분석가입니다. '마이너스 경매(Strategic Positioning)' 게임의 결과를 분석해주세요.
+
+[게임 개요]
+이 게임은 기업의 시장 포지셔닝 전략을 시뮬레이션합니다. 각 팀은 마이너스 프로젝트(-26억 ~ -50억)를 경매를 통해 획득하며, 연속된 숫자를 모으면 시너지 효과로 부채가 최소화됩니다.
+
+[최종 결과]
+${teamsInfo}
+
+[주요 게임 로그]
+${logSummary}
+
+[분석 요청]
+다음 형식으로 종합적인 분석을 제공해주세요:
+
+## 🏆 게임 종합 평가
+(전체 게임의 흐름과 특징적인 순간들을 분석)
+
+## 📊 포지셔닝 맵 분석
+(각 팀의 전략을 블루오션/레드오션/퍼플오션 관점에서 분석)
+- X축: 리스크 수용도 (보수적 ↔ 공격적)
+- Y축: 시너지 추구도 (개별 최적화 ↔ 연속 시퀀스 추구)
+
+## 👥 팀별 전략 분석
+
+### 우승팀 (${winner.colorIdx + 1}팀) 전략 분석
+- 핵심 성공 요인
+- 결정적 의사결정 순간
+- 경영전략적 시사점
+
+### 각 팀별 분석
+(각 팀의 전략적 우수점과 아쉬운 점)
+
+## 💡 Strategic Positioning 교훈
+(이 게임에서 배울 수 있는 경영전략적 인사이트)
+
+한국어로 작성하고, 경영전략 컨설턴트 톤으로 전문적이면서도 이해하기 쉽게 설명해주세요.
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-preview-05-20',
+      contents: prompt,
+    });
+
+    return response.text || "분석을 생성할 수 없습니다.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "게임 분석을 생성할 수 없습니다. 잠시 후 다시 시도해주세요.";
+  }
+};
+
+// Helper function to find sequences in cards
+const findSequences = (cards: number[]): number[][] => {
+  if (cards.length === 0) return [];
+
+  const sorted = [...cards].sort((a, b) => a - b);
+  const sequences: number[][] = [];
+  let currentSeq: number[] = [sorted[0]];
+
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === sorted[i - 1] + 1) {
+      currentSeq.push(sorted[i]);
+    } else {
+      if (currentSeq.length >= 2) {
+        sequences.push([...currentSeq]);
+      }
+      currentSeq = [sorted[i]];
+    }
+  }
+
+  if (currentSeq.length >= 2) {
+    sequences.push(currentSeq);
+  }
+
+  return sequences;
+};
+
+// Generate winner poster with uploaded photo using Gemini Imagen
+export const generateWinnerPoster = async (
+  gameState: GameState,
+  imageBase64: string,
+  mimeType: string
+): Promise<string> => {
+  try {
+    const apiKey = gameState.config?.geminiApiKey;
+    const ai = getClient(apiKey);
+    if (!ai) {
+      throw new Error("API 키가 설정되지 않았습니다.");
+    }
+
+    const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+    const memberNames = winner.members?.join(', ') || winner.name;
+
+    // Use Gemini to generate image editing prompt and create poster
+    const prompt = `
+Create a dramatic movie poster in the style of the Korean Netflix drama "Casino" (starring Choi Min-sik).
+
+Requirements:
+- Style: Dark, noir, cinematic with gold and red accents
+- Title: "STRATEGIC POSITIONING" in bold at the top
+- Subtitle: "The Art of Calculated Risk"
+- Winner team: "Team ${winner.colorIdx + 1}" prominently displayed
+- Team members: ${memberNames}
+- Score display: "Final Score: ${winner.score}억"
+- Director credit style: "A JJ Creative Lab Production"
+- Cast credits style listing the team members
+- Dramatic lighting with shadows
+- Casino/poker aesthetic elements
+- Korean drama poster composition
+
+Transform the uploaded team photo into this cinematic poster style while keeping the people recognizable.
+`;
+
+    // Note: Gemini's image generation capabilities vary by model
+    // Using gemini-2.0-flash-exp for imagen capabilities
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: mimeType,
+                data: imageBase64
+              }
+            }
+          ]
+        }
+      ],
+      config: {
+        responseModalities: ['image', 'text'],
+      }
+    });
+
+    // Extract image from response
+    if (response.candidates && response.candidates[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
+      }
+    }
+
+    throw new Error("이미지를 생성할 수 없습니다.");
+  } catch (error) {
+    console.error("Poster Generation Error:", error);
+    throw error;
+  }
+};
+
+// Generate poster description for manual creation
+export const generatePosterDescription = async (
+  gameState: GameState
+): Promise<string> => {
+  try {
+    const apiKey = gameState.config?.geminiApiKey;
+    const ai = getClient(apiKey);
+    if (!ai) {
+      return "API 키가 설정되지 않았습니다.";
+    }
+
+    const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
+    const memberNames = winner.members?.join(', ') || winner.name;
+
+    const prompt = `
+한국 넷플릭스 드라마 "카지노" (최민식 주연) 스타일의 우승팀 포스터 설명을 작성해주세요.
+
+우승팀 정보:
+- 팀: ${winner.colorIdx + 1}팀
+- 팀원: ${memberNames}
+- 최종 점수: ${winner.score}억
+- 보유 프로젝트: [${winner.cards.join(', ')}]
+
+다음 요소를 포함한 포스터 컨셉을 상세히 설명해주세요:
+1. 전체적인 분위기와 색감
+2. 배경 디자인
+3. 타이틀과 서브타이틀 배치
+4. 팀원 이름 크레딧 스타일
+5. 영화 포스터 특유의 태그라인
+
+한국어로, 실제 포스터 디자이너에게 전달할 수 있을 정도로 구체적으로 작성해주세요.
+`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-preview-05-20',
+      contents: prompt,
+    });
+
+    return response.text || "포스터 설명을 생성할 수 없습니다.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "포스터 설명을 생성할 수 없습니다.";
+  }
+};

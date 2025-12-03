@@ -4,7 +4,7 @@ import PlayerBoard from './PlayerBoard';
 import GameCard from './GameCard';
 import Chip from './Chip';
 import { CHIP_UNIT, MIN_PLAYERS } from '../constants';
-import { RefreshCw, Play, Trophy, Users, Monitor, Eye, LayoutGrid, LogOut } from 'lucide-react';
+import { RefreshCw, Play, Trophy, Users, Monitor, Eye, LayoutGrid, LogOut, BarChart3 } from 'lucide-react';
 
 interface AdminViewProps {
   gameState: GameState;
@@ -12,9 +12,10 @@ interface AdminViewProps {
   onReset: () => void;
   onViewPlayer: (playerId: string) => void;
   onExit: () => void;
+  onShowResults?: () => void;
 }
 
-const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, onViewPlayer, onExit }) => {
+const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, onViewPlayer, onExit, onShowResults }) => {
   // Safety: ensure players is always an array
   const players = gameState.players || [];
   const config = gameState.config || { roomName: 'Game Room', maxTeams: 6 };
@@ -191,8 +192,19 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-32 h-2 bg-black/50 blur-sm rounded-full"></div>
                      </div>
                      <h2 className="text-6xl font-black mt-4 mb-2 text-white drop-shadow-xl font-serif">WINNER</h2>
-                     <div className="text-4xl font-bold text-yellow-400 mb-8">{winner?.name}</div>
-                     
+                     <div className="text-4xl font-bold text-yellow-400 mb-4">{winner?.name}</div>
+
+                     {/* Results Analysis Button */}
+                     {onShowResults && (
+                        <button
+                           onClick={onShowResults}
+                           className="mb-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 mx-auto transition-all shadow-lg hover:shadow-indigo-500/30 hover:scale-105"
+                        >
+                           <BarChart3 size={20} />
+                           Strategic Position 결과 분석
+                        </button>
+                     )}
+
                      <div className="flex items-center gap-4 bg-black/60 p-4 rounded-xl border border-white/10 backdrop-blur-md">
                         <span className="text-xs text-zinc-400 uppercase font-bold">Hidden Project Revealed</span>
                         <GameCard value={gameState.hiddenCard!} isHidden={false} className="w-16 h-24 text-[10px]" />
