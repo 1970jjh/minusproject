@@ -1,29 +1,50 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { GameState } from "../types";
 import { CHIP_UNIT } from "../constants";
 
 // Models to use
-const GEMINI_TEXT_MODEL = "gemini-2.5-pro-preview-05-06";  // For text analysis/reports (latest)
-const GEMINI_VISION_MODEL = "gemini-2.5-flash-preview-05-20";  // For image analysis
+const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis/reports
+const IMAGEN_MODEL = "imagen-3.0-generate-002";  // For image generation
 
 // Get Gemini API client with API key from environment variable
-const getClient = () => {
+const getClient = (): GoogleGenAI | null => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
         console.error("Gemini API key is not configured. Set VITE_GEMINI_API_KEY in .env");
         return null;
     }
-    return new GoogleGenerativeAI(apiKey);
+    return new GoogleGenAI({ apiKey });
+};
+
+// Helper to check for billing errors
+const handleApiError = (error: any): string => {
+    const errorMessage = error?.message || error?.toString() || "";
+    const statusCode = error?.status || error?.statusCode || 0;
+
+    console.error("API Error:", error);
+
+    // Check for billing/quota errors
+    if (statusCode === 403 || statusCode === 400 ||
+        errorMessage.includes("403") || errorMessage.includes("400") ||
+        errorMessage.includes("billing") || errorMessage.includes("quota") ||
+        errorMessage.includes("PERMISSION_DENIED") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
+        return "API 키의 결제 설정(Billing)을 확인해주세요. Imagen 3 이미지 생성은 Google Cloud 결제가 연결된 프로젝트에서만 작동합니다.";
+    }
+
+    // Check for model not found errors
+    if (statusCode === 404 || errorMessage.includes("404") || errorMessage.includes("not found")) {
+        return "모델을 찾을 수 없습니다. API 키와 모델 접근 권한을 확인해주세요.";
+    }
+
+    return "API 호출 중 오류가 발생했습니다. API 키를 확인해주세요.";
 };
 
 export const getStrategicAdvice = async (gameState: GameState, myTeamId: string): Promise<string> => {
   try {
-    const genAI = getClient();
-    if (!genAI) {
+    const ai = getClient();
+    if (!ai) {
         return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
     }
-
-    const model = genAI.getGenerativeModel({ model: GEMINI_TEXT_MODEL });
 
     // Find team by ID
     const me = gameState.players.find(p => p.id === myTeamId);
@@ -73,23 +94,23 @@ ${allPlayersInfo}
 현재 상황을 분석하여 PASS vs TAKE 전략을 3-4문장으로 조언해주세요.
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text() || "조언을 생성할 수 없습니다.";
+    const response = await ai.models.generateContent({
+      model: GEMINI_TEXT_MODEL,
+      contents: prompt,
+    });
+
+    return response.text || "조언을 생성할 수 없습니다.";
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "전략 분석 중 오류가 발생했습니다. API 키를 확인해주세요.";
+    return handleApiError(error);
   }
 };
 
 export const generateGameAnalysis = async (gameState: GameState): Promise<string> => {
   try {
-    const genAI = getClient();
-    if (!genAI) {
+    const ai = getClient();
+    if (!ai) {
       return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
     }
-
-    const model = genAI.getGenerativeModel({ model: GEMINI_TEXT_MODEL });
 
     const rankedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
     const winner = rankedPlayers[0];
@@ -115,28 +136,30 @@ ${teamsInfo}
 
 다음 형식으로 분석해주세요:
 
-## 🏆 게임 종합 평가
+## 게임 종합 평가
 (전체 게임 흐름 분석)
 
-## 📊 전략 분석
+## 전략 분석
 (각 팀의 전략을 블루오션/레드오션/퍼플오션 관점에서)
 
-## 👥 우승팀 (${winner.colorIdx + 1}팀) 성공 요인
+## 우승팀 (${winner.colorIdx + 1}팀) 성공 요인
 - 핵심 성공 요인
 - 경영전략적 시사점
 
-## 💡 교훈
+## 교훈
 (이 게임에서 배울 수 있는 인사이트)
 
 한국어로 전문적이면서 이해하기 쉽게 작성해주세요.
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text() || "분석을 생성할 수 없습니다.";
+    const response = await ai.models.generateContent({
+      model: GEMINI_TEXT_MODEL,
+      contents: prompt,
+    });
+
+    return response.text || "분석을 생성할 수 없습니다.";
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "게임 분석 중 오류가 발생했습니다. API 키를 확인해주세요.";
+    return handleApiError(error);
   }
 };
 
@@ -158,70 +181,72 @@ const findSequences = (cards: number[]): number[][] => {
   return sequences;
 };
 
-// Generate winner poster - Note: Gemini API cannot generate images directly
-// This function analyzes the uploaded image and returns a description for manual poster creation
+// Generate winner poster image using Imagen 3
 export const generateWinnerPoster = async (
-  gameState: GameState,
-  base64ImageData: string,
-  mimeType: string
+  gameState: GameState
 ): Promise<string> => {
   try {
-    const genAI = getClient();
-    if (!genAI) {
+    const ai = getClient();
+    if (!ai) {
       throw new Error("API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.");
     }
 
-    // Use gemini-1.5-flash for image analysis (multimodal)
-    const model = genAI.getGenerativeModel({ model: GEMINI_VISION_MODEL });
     const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
     const memberNames = winner.members?.join(', ') || winner.name;
 
-    const prompt = `
-당신은 게임 우승팀 포스터 디자인 전문가입니다.
+    // Imagen 3 image generation prompt
+    const imagePrompt = `Create a dramatic Netflix Korean drama "Casino" style winner poster.
+Dark cinematic atmosphere with neon purple and gold lighting.
+Text overlay: "TEAM ${winner.colorIdx + 1} - WINNER" in bold metallic gold font.
+"Strategic Positioning Champion" subtitle.
+Score: "${winner.score} Billion" displayed prominently.
+Members: "${memberNames}" in elegant white text.
+Background: luxurious casino/auction house with dramatic shadows.
+Style: high contrast, cinematic color grading, premium quality, dramatic lighting.
+Mood: triumphant, prestigious, exclusive.`;
 
-[우승팀 정보]
-- 팀: ${winner.colorIdx + 1}팀
-- 팀원: ${memberNames}
-- 최종 점수: ${winner.score}억
-
-업로드된 팀 사진을 분석하여, Netflix "카지노" 스타일의 드라마틱한 포스터 컨셉을 제안해주세요.
-사진 속 인물들의 특징, 분위기를 활용한 구체적인 디자인 방향을 제시해주세요.
-
-형식:
-## 📸 사진 분석
-(사진 속 인물/분위기 설명)
-
-## 🎬 포스터 컨셉
-(구체적인 디자인 방향)
-
-## 📝 추천 태그라인
-(3-5개의 태그라인 제안)
-`;
-
-    const imagePart = {
-      inlineData: {
-        data: base64ImageData,
-        mimeType: mimeType
+    // Use Imagen 3 generateImages method
+    const response = await ai.models.generateImages({
+      model: IMAGEN_MODEL,
+      prompt: imagePrompt,
+      config: {
+        numberOfImages: 1,
+        aspectRatio: "9:16",  // Portrait for poster
       }
-    };
+    });
 
-    const result = await model.generateContent([prompt, imagePart]);
-    const response = await result.response;
-    return response.text() || "포스터 컨셉을 생성할 수 없습니다.";
-  } catch (error) {
+    // Get the generated image as base64
+    if (response.generatedImages && response.generatedImages.length > 0) {
+      const imageBytes = response.generatedImages[0].image?.imageBytes;
+      if (imageBytes) {
+        // Return as data URL for display in browser
+        return `data:image/png;base64,${imageBytes}`;
+      }
+    }
+
+    throw new Error("이미지 생성 결과가 없습니다.");
+  } catch (error: any) {
     console.error("Poster generation error:", error);
+
+    // Check for billing/permission errors specifically for Imagen
+    const errorMessage = error?.message || error?.toString() || "";
+    if (errorMessage.includes("403") || errorMessage.includes("400") ||
+        errorMessage.includes("billing") || errorMessage.includes("PERMISSION_DENIED") ||
+        errorMessage.includes("not enabled") || errorMessage.includes("quota")) {
+      throw new Error("API 키의 결제 설정(Billing)을 확인해주세요. Imagen 3 이미지 생성은 Google Cloud 결제가 연결된 프로젝트에서만 작동합니다.");
+    }
+
     throw error;
   }
 };
 
 export const generatePosterDescription = async (gameState: GameState): Promise<string> => {
   try {
-    const genAI = getClient();
-    if (!genAI) {
+    const ai = getClient();
+    if (!ai) {
       return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
     }
 
-    const model = genAI.getGenerativeModel({ model: GEMINI_TEXT_MODEL });
     const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
     const memberNames = winner.members?.join(', ') || winner.name;
 
@@ -241,11 +266,13 @@ export const generatePosterDescription = async (gameState: GameState): Promise<s
 한국어로 구체적으로 작성해주세요.
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text() || "포스터 설명을 생성할 수 없습니다.";
+    const response = await ai.models.generateContent({
+      model: GEMINI_TEXT_MODEL,
+      contents: prompt,
+    });
+
+    return response.text || "포스터 설명을 생성할 수 없습니다.";
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "포스터 설명 생성 중 오류가 발생했습니다.";
+    return handleApiError(error);
   }
 };
