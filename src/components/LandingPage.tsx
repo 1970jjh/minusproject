@@ -331,7 +331,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 Select Team <span className="text-zinc-600">(최대 {MAX_TEAM_MEMBERS}명/팀)</span>
               </label>
               <div className="grid grid-cols-4 gap-3">
-                {TEAM_COLORS.map((color, idx) => {
+                {TEAM_COLORS.slice(0, selectedRoom.config.maxTeams).map((color, idx) => {
                   const team = roomTeams.find(t => t.colorIdx === idx);
                   const memberCount = team?.members?.length || 0;
                   const isFull = memberCount >= MAX_TEAM_MEMBERS;
