@@ -3,8 +3,8 @@ import { GameState } from "../types";
 import { CHIP_UNIT } from "../constants";
 
 // Models to use
-const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis
-const GEMINI_VISION_MODEL = "gemini-1.5-flash";  // For image analysis
+const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis/reports
+const GEMINI_VISION_MODEL = "gemini-2.0-flash-exp";  // For image analysis
 
 // Get Gemini API client with API key from environment variable
 const getClient = () => {
