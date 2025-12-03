@@ -4,7 +4,7 @@ import { CHIP_UNIT } from "../constants";
 
 // Models to use
 const GEMINI_TEXT_MODEL = "gemini-2.0-flash";  // For text analysis/reports
-const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp";  // For image generation
+const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp-image-generation";  // For image generation (Nano Banana)
 
 // Get Gemini API client with API key from environment variable
 const getClient = (): GoogleGenAI | null => {
@@ -168,7 +168,9 @@ export const generateGameAnalysis = async (gameState: GameState): Promise<GameAn
 [최종 결과]
 ${teamsInfo}
 
-다음 형식으로 매우 상세하게 분석해주세요. 각 섹션은 [SECTION:제목] 형식으로 시작하고 [/SECTION]으로 끝냅니다. 마크다운 기호(*, **)는 사용하지 마세요.
+다음 형식으로 매우 상세하게 분석해주세요. 각 섹션은 [SECTION:제목] 형식으로 시작하고 [/SECTION]으로 끝냅니다.
+
+중요: 마크다운 기호를 절대 사용하지 마세요! *, **, #, ##, - 등의 기호를 텍스트에 포함하지 마세요. 순수한 텍스트만 작성하세요.
 
 [SECTION:EXECUTIVE SUMMARY (경영 요약)]
 이번 시뮬레이션의 핵심 인사이트를 3-4문장으로 요약해주세요. 어떤 전략이 효과적이었고, 어떤 팀이 왜 성공/실패했는지 한눈에 파악할 수 있도록 작성해주세요.
@@ -315,30 +317,20 @@ export const generateWinnerPoster = async (
       const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
       const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
 
-      imagePrompt = `Transform this team photo into a professional winner poster inspired by HBO's Silicon Valley poster style.
+      imagePrompt = `Edit this team photo to create a professional winner poster. Keep ALL people exactly as they are.
 
-ABSOLUTE REQUIREMENTS:
-1. EVERY SINGLE PERSON in the original photo MUST appear in the final image. Count the people and ensure the EXACT same number appears.
-2. ALL faces must be clearly visible and NOT covered by any text or graphics.
-3. Preserve each person's exact face, expression, pose, and position.
+EDITING INSTRUCTIONS:
+1. Keep every person's face, body, pose, and position EXACTLY the same - do not modify any person
+2. Only change the BACKGROUND to a clean gradient (light gray to white)
+3. Add professional studio lighting effect on the people
+4. Add slight vignette effect around edges
 
-Style (like Silicon Valley HBO poster):
-- Clean, simple gradient background (light gray to white, or subtle blue gradient)
-- Focus entirely on the PEOPLE - their faces should be the main visual element
-- Professional, polished look with good lighting on faces
-- Slight vignette effect around edges
+TEXT TO ADD (in empty space only, never over people):
+- Top: "TEAM ${winner.colorIdx + 1}" in bold black modern font
+- Bottom: "PROJECT LEADERS" in large bold red text
+- Below that: "Total Asset: ${Math.abs(winner.score)} Billion" in smaller text
 
-Text placement (MUST NOT cover any person):
-- Top area (above people's heads): "TEAM ${winner.colorIdx + 1}" in bold modern font
-- Very bottom of image (below people): "PROJECT LEADERS" in large bold red or orange text, similar to Silicon Valley logo style
-- Small text below that: "Total Asset: ${Math.abs(winner.score)} Billion"
-
-CRITICAL:
-- Text must be positioned in empty space ONLY - never overlapping with any person
-- If the original photo has 7 people, the output MUST have exactly 7 people
-- Every face from the original must be recognizable in the output
-
-The final result should look like a professional TV show promotional poster featuring the actual team members.`;
+IMPORTANT: Do NOT alter, replace, or regenerate any person's face. The people must remain 100% identical to the input photo.`;
 
       contents = [
         {
