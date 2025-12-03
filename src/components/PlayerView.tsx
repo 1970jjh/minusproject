@@ -5,7 +5,7 @@ import Chip from './Chip';
 import { getStrategicAdvice } from '../services/geminiService';
 import { updateAiAdviceUsage, MAX_AI_ADVICE_PER_TEAM } from '../services/roomService';
 import { playVoiceEffect, initializeSpeech } from '../services/soundService';
-import { Cpu, XCircle, CheckCircle, Home, Loader2, LogOut, Eye } from 'lucide-react';
+import { Cpu, XCircle, CheckCircle, Home, Loader2, LogOut, Eye, Zap, TrendingUp, Database, Activity, Sparkles } from 'lucide-react';
 
 interface PlayerViewProps {
   gameState: GameState;
@@ -40,35 +40,42 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
 
   const players = gameState.players || [];
   const me = players.find(p => p.id === playerId);
-  
+
   // -- Error / Loading States --
   if (!me) {
     if (connectionTime < 5) {
         return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 space-y-6">
-                <Loader2 size={48} className="text-red-600 animate-spin" />
-                <div className="text-center">
-                    <h2 className="text-xl font-bold mb-2">게임 서버 접속 중...</h2>
-                    <p className="text-zinc-500 text-sm">잠시만 기다려주세요.</p>
+            <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-8 space-y-6 relative overflow-hidden">
+                <div className="absolute inset-0 tech-grid pointer-events-none"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-600/20 rounded-full blur-[150px]"></div>
+                <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mb-6 animate-pulse">
+                        <Database size={28} className="text-white" />
+                    </div>
+                    <h2 className="text-xl font-semibold mb-2">Connecting to Server...</h2>
+                    <p className="text-zinc-500 text-sm">Establishing secure connection</p>
                 </div>
             </div>
         );
     }
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 space-y-6">
-            <XCircle size={64} className="text-zinc-700" />
-            <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">접속 정보 없음</h2>
-                <p className="text-zinc-500 mb-6">게임이 초기화되었거나,<br/>방에 입장할 수 없습니다.</p>
-                <button 
+        <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-8 space-y-6 relative overflow-hidden">
+            <div className="absolute inset-0 tech-grid pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 rounded-2xl glass flex items-center justify-center mb-6">
+                    <XCircle size={40} className="text-zinc-600" />
+                </div>
+                <h2 className="text-2xl font-semibold mb-2">Connection Lost</h2>
+                <p className="text-zinc-500 mb-8 text-center">Game has been reset or<br/>room is no longer available.</p>
+                <button
                   onClick={() => window.location.reload()}
-                  className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold flex items-center gap-2 mx-auto transition-colors"
+                  className="px-8 py-3 glass hover:bg-white/10 rounded-xl font-semibold flex items-center gap-2 transition-all"
                 >
-                    <Home size={18} /> 홈으로 돌아가기
+                    <Home size={18} /> Return to Home
                 </button>
                 {isAdmin && onReturnToAdmin && (
-                    <button onClick={onReturnToAdmin} className="text-sm text-red-500 underline mt-4 block">
-                        관리자 뷰로 복귀
+                    <button onClick={onReturnToAdmin} className="text-sm text-indigo-400 hover:text-indigo-300 mt-4 transition-colors">
+                        Return to Admin View
                     </button>
                 )}
             </div>
@@ -82,12 +89,16 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
   // Get current AI advice usage for this team
   const currentAiUsage = gameState.aiAdviceUsage?.[playerId] || 0;
   const remainingAdvice = MAX_AI_ADVICE_PER_TEAM - currentAiUsage;
-  const canUseAdvice = remainingAdvice > 0;
+  const canUseAdvice = remainingAdvice > 0 && gameState.phase === GamePhase.PLAYING;
 
   const handleGetAdvice = async () => {
     if (!roomId || !canUseAdvice) {
       setShowAdviceModal(true);
-      setAdvice(`AI 조언 사용 횟수를 모두 소진했습니다. (${currentAiUsage}/${MAX_AI_ADVICE_PER_TEAM})`);
+      if (remainingAdvice <= 0) {
+        setAdvice(`AI 조언 사용 횟수를 모두 소진했습니다. (${currentAiUsage}/${MAX_AI_ADVICE_PER_TEAM})`);
+      } else {
+        setAdvice('게임이 진행 중일 때만 AI 조언을 받을 수 있습니다.');
+      }
       return;
     }
 
@@ -111,14 +122,14 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
   const AdminControls = () => (
       isAdmin && onReturnToAdmin ? (
         <>
-          <div className="bg-red-600/90 backdrop-blur text-white text-[10px] font-bold text-center py-1 uppercase tracking-widest sticky top-0 z-50 flex items-center justify-center gap-2">
-            <Eye size={12} /> Administrator Spectator Mode
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-semibold text-center py-2 uppercase tracking-[0.2em] sticky top-0 z-50 flex items-center justify-center gap-2">
+            <Eye size={12} /> Admin Spectator Mode
           </div>
-          <button 
+          <button
             onClick={onReturnToAdmin}
-            className="fixed top-8 right-4 z-50 bg-zinc-900 text-white px-4 py-2 rounded-full shadow-lg border border-zinc-700 font-bold text-xs flex items-center gap-2 hover:bg-zinc-800 transition-colors"
+            className="fixed top-12 right-4 z-50 glass text-white px-4 py-2 rounded-full shadow-lg font-semibold text-xs flex items-center gap-2 hover:bg-white/10 transition-colors"
           >
-            <LogOut size={14} /> 나가기
+            <LogOut size={14} /> Exit View
           </button>
         </>
       ) : null
@@ -127,120 +138,157 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
   // -- Lobby State --
   if (gameState.phase === GamePhase.LOBBY) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8 text-center relative">
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+        <div className="absolute inset-0 tech-grid pointer-events-none"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[150px]"></div>
+
         <AdminControls />
-        <div className={`w-28 h-28 rounded-full ${colorTheme.bg} flex items-center justify-center mb-8 animate-bounce shadow-lg ring-4 ring-white/10`}>
-           <span className="text-5xl">⏳</span>
-        </div>
-        <h2 className="text-3xl font-bold mb-3">대기 중...</h2>
-        <p className="text-zinc-400 leading-relaxed mb-8">
-            관리자가 게임을 시작할 때까지<br/>
-            팀원들과 전략을 상의하세요.
-        </p>
-        <div className="w-full max-w-xs p-6 bg-zinc-900 rounded-2xl border border-zinc-800">
-           <p className="text-xs text-zinc-500 tracking-widest mb-2">나의 팀</p>
-           <p className={`text-2xl font-bold ${colorTheme.text}`}>{me.colorIdx + 1}팀</p>
+
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mb-8 animate-pulse shadow-[0_0_60px_rgba(99,102,241,0.3)]">
+             <Loader2 size={40} className="text-white animate-spin" />
+          </div>
+          <h2 className="text-3xl font-bold mb-3">Awaiting Launch</h2>
+          <p className="text-zinc-400 leading-relaxed mb-8">
+              The administrator is preparing the game.<br/>
+              Discuss strategies with your team.
+          </p>
+          <div className="glass rounded-2xl p-6 min-w-[200px]">
+             <p className="text-xs text-zinc-500 tracking-widest mb-2 uppercase">Your Team</p>
+             <p className="text-3xl font-bold text-white">Team {me.colorIdx + 1}</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // -- Playing State --
+  // -- Playing State (Glassmorphism UI) --
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col relative">
+    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 tech-grid pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+
       <AdminControls />
-      
+
       {/* Header Panel (My Status) */}
-      <div className={`p-6 ${colorTheme.bg} pb-12 rounded-b-[2.5rem] shadow-2xl relative overflow-hidden transition-colors duration-500`}>
-         <div className="absolute inset-0 bg-black/10"></div>
-         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/40 to-transparent"></div>
-         
-         <div className="relative z-10 flex justify-between items-start">
+      <div className="relative z-10 p-6 pb-16">
+        <div className="glass rounded-3xl p-6 relative overflow-hidden">
+          {/* Accent gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 pointer-events-none"></div>
+
+          <div className="relative z-10 flex justify-between items-start">
             <div>
-               <h1 className="text-3xl font-black flex items-center gap-2 tracking-tight">
-                 {me.colorIdx + 1}팀
-               </h1>
-               <div className="mt-4 flex items-center gap-3">
-                 <div className="bg-black/30 backdrop-blur-md px-5 py-2.5 rounded-2xl flex items-center gap-2 border border-white/10">
-                    <Chip count={1} className="scale-90" />
-                    <span className="text-2xl font-mono font-bold text-white">{me.chips}{CHIP_UNIT}</span>
+               <div className="flex items-center gap-3 mb-4">
+                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
+                   <span className="text-xl font-bold text-white">{me.colorIdx + 1}</span>
                  </div>
-                 <span className="text-xs text-white/60">현재 자원</span>
+                 <div>
+                   <h1 className="text-2xl font-bold text-white">Team {me.colorIdx + 1}</h1>
+                   <span className="text-xs text-zinc-500">Strategic Operations</span>
+                 </div>
+               </div>
+               <div className="flex items-center gap-3">
+                 <div className="glass-dark px-4 py-2.5 rounded-xl flex items-center gap-2">
+                    <Chip count={1} className="scale-75" />
+                    <span className="text-xl font-mono font-bold text-yellow-400">{me.chips}{CHIP_UNIT}</span>
+                 </div>
+                 <span className="text-xs text-zinc-500">Resources</span>
                </div>
             </div>
-            <div className="text-right">
-               <div className="text-[10px] text-white/80 tracking-widest mb-1 font-bold">현재 수익</div>
-               <div className={`text-3xl font-black ${me.score < 0 ? 'text-white' : 'text-white'} drop-shadow-md`}>
-                 {me.score}억
+            <div className="text-right glass-dark rounded-xl p-4">
+               <div className="text-[10px] text-zinc-500 tracking-widest mb-1 uppercase">Net Score</div>
+               <div className={`text-3xl font-bold font-mono ${me.score >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                 {me.score > 0 ? '+' : ''}{me.score}억
                </div>
             </div>
-         </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-6 -mt-8 relative z-20 flex flex-col gap-6">
-        
+      <div className="flex-1 px-6 -mt-8 relative z-20 flex flex-col gap-5 pb-6">
+
         {/* Current Auction Info */}
-        <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800 shadow-xl">
-           <div className="flex justify-between items-center mb-4">
-              <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Current Auction</span>
-              <div className="flex items-center gap-2 bg-zinc-800/50 px-3 py-1 rounded-full border border-zinc-700">
-                 <span className="text-[10px] text-zinc-400 font-bold">POT</span>
-                 <span className="text-yellow-500 font-bold font-mono">{gameState.pot}{CHIP_UNIT}</span>
-              </div>
-           </div>
-           
-           <div className="flex justify-center items-center py-6 bg-zinc-950 rounded-2xl border border-zinc-800/50">
-              <div className="text-center">
-                 <div className="text-6xl font-black text-white mb-2 tracking-tighter">{gameState.currentCard}억</div>
-                 <span className="text-xs text-red-500 font-bold uppercase tracking-[0.3em] bg-red-900/20 px-2 py-1 rounded">Minus Project</span>
-              </div>
+        <div className="glass rounded-2xl p-5 relative overflow-hidden">
+           <div className="absolute inset-0 bg-gradient-to-r from-red-600/5 to-transparent pointer-events-none"></div>
+
+           <div className="relative z-10">
+             <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap size={14} className="text-red-400" />
+                  <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Current Auction</span>
+                </div>
+                <div className="flex items-center gap-2 glass-dark px-3 py-1.5 rounded-lg">
+                   <span className="text-[10px] text-zinc-500 uppercase">Pot</span>
+                   <span className="text-yellow-400 font-bold font-mono">{gameState.pot}{CHIP_UNIT}</span>
+                </div>
+             </div>
+
+             <div className="flex justify-center items-center py-8 glass-dark rounded-2xl">
+                <div className="text-center">
+                   <div className="text-6xl font-bold text-white mb-3 font-mono">{gameState.currentCard}억</div>
+                   <span className="text-xs text-red-400 font-semibold uppercase tracking-[0.2em] glass px-3 py-1 rounded-full">Minus Project</span>
+                </div>
+             </div>
            </div>
         </div>
 
-        {/* My Cards (Small view) */}
+        {/* My Projects (Small view) */}
         {me.cards.length > 0 && (
-            <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">My Projects</p>
+            <div className="glass rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Database size={12} className="text-zinc-500" />
+                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-widest">My Projects</p>
+                </div>
                 <div className="flex flex-wrap gap-2">
                     {[...me.cards].sort((a,b)=>a-b).map(c => (
-                        <span key={c} className="text-xs font-bold px-2 py-1 bg-zinc-800 rounded border border-zinc-700 text-zinc-400">{c}</span>
+                        <span key={c} className="text-xs font-mono font-semibold px-3 py-1.5 glass-dark rounded-lg text-zinc-300">{c}</span>
                     ))}
                 </div>
             </div>
         )}
 
-        {/* Other Teams' Projects */}
-        <div className="bg-zinc-900/50 p-4 rounded-2xl border border-zinc-800">
-            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">다른 팀 현황</p>
+        {/* Other Teams' Status */}
+        <div className="glass rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity size={12} className="text-zinc-500" />
+              <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-widest">Other Teams Status</p>
+            </div>
             <div className="space-y-2">
                 {[...players]
                     .filter(p => p.id !== playerId)
                     .sort((a, b) => a.colorIdx - b.colorIdx)
                     .map(player => {
-                        const teamColor = TEAM_COLORS[player.colorIdx % TEAM_COLORS.length];
+                        const isCurrentTurn = players[gameState.currentPlayerIndex]?.id === player.id;
                         return (
-                            <div key={player.id} className="flex items-center gap-3 p-2 bg-black/30 rounded-lg">
-                                <div className={`w-6 h-6 rounded-full ${teamColor.bg} flex items-center justify-center`}>
-                                    <span className="text-white text-xs font-bold">{player.colorIdx + 1}</span>
+                            <div key={player.id} className={`flex items-center gap-3 p-3 glass-dark rounded-xl transition-all ${isCurrentTurn ? 'ring-1 ring-indigo-500/50' : ''}`}>
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                                    <span className="text-white text-sm font-bold">{player.colorIdx + 1}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <span className="text-zinc-400 font-bold">{player.colorIdx + 1}팀</span>
-                                        <span className="text-zinc-600">|</span>
-                                        <span className="text-emerald-400 font-mono">{player.chips}억</span>
-                                        <span className="text-zinc-600">|</span>
-                                        <span className={`font-mono ${player.score < 0 ? 'text-red-400' : 'text-blue-400'}`}>
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <span className="text-zinc-300 font-semibold">Team {player.colorIdx + 1}</span>
+                                        {isCurrentTurn && (
+                                          <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded text-[10px] font-semibold animate-pulse">
+                                            ACTIVE
+                                          </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1 text-[11px]">
+                                        <span className="text-yellow-400 font-mono">{player.chips}억</span>
+                                        <span className="text-zinc-600">•</span>
+                                        <span className={`font-mono ${player.score >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                                             {player.score > 0 ? '+' : ''}{player.score}
                                         </span>
+                                        {player.cards.length > 0 && (
+                                          <>
+                                            <span className="text-zinc-600">•</span>
+                                            <span className="text-zinc-500">{player.cards.length} projects</span>
+                                          </>
+                                        )}
                                     </div>
-                                    {player.cards.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {[...player.cards].sort((a,b)=>a-b).map(c => (
-                                                <span key={c} className="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-500">{c}</span>
-                                            ))}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -248,66 +296,77 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
             </div>
         </div>
 
+        {/* AI Advice Button - Always Available */}
+        <button
+          onClick={handleGetAdvice}
+          disabled={!canUseAdvice}
+          className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all
+            ${canUseAdvice
+              ? 'glass-accent hover:bg-indigo-500/20 text-indigo-300'
+              : 'glass text-zinc-600 cursor-not-allowed'}
+          `}
+        >
+           <Sparkles size={18} className={canUseAdvice ? 'animate-pulse' : ''} />
+           AI Strategic Advice
+           <span className={`px-2.5 py-1 rounded-lg text-xs font-mono ${canUseAdvice ? 'bg-indigo-900/50 text-indigo-300' : 'bg-zinc-800 text-zinc-600'}`}>
+             {currentAiUsage}/{MAX_AI_ADVICE_PER_TEAM}
+           </span>
+        </button>
+
         {/* Action Buttons */}
-        <div className="flex-1 flex flex-col justify-end gap-4 pb-8">
+        <div className="flex-1 flex flex-col justify-end gap-4 pb-4">
            {isMyTurn ? (
              <>
-                <div className="flex gap-4 h-36">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-emerald-400 text-sm font-semibold">Your Turn - Make Your Move</span>
+                </div>
+                <div className="flex gap-4 h-32">
                    <button
                      onClick={() => handleActionWithSound('pass')}
                      disabled={me.chips <= 0}
-                     className={`flex-1 rounded-2xl font-bold text-xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-3 border-b-4
+                     className={`flex-1 rounded-2xl font-bold text-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-2
                        ${me.chips > 0
-                         ? 'bg-zinc-800 hover:bg-zinc-700 text-red-400 border-zinc-950'
-                         : 'bg-zinc-900 text-zinc-700 border-zinc-950 opacity-50 cursor-not-allowed'}
+                         ? 'glass hover:bg-red-500/10 hover:border-red-500/30 text-red-400'
+                         : 'glass text-zinc-700 opacity-50 cursor-not-allowed'}
                      `}
                    >
-                     <div className="p-3 bg-red-900/20 rounded-full">
-                        <XCircle size={32} />
+                     <div className="p-3 glass-dark rounded-xl">
+                        <XCircle size={28} />
                      </div>
-                     <div>
-                        <span className="block text-sm opacity-80 mb-0.5">자원 1개 지불</span>
-                        PASS
+                     <div className="text-center">
+                        <span className="block text-[10px] text-zinc-500 mb-1">Pay 1 Resource</span>
+                        <span className="uppercase tracking-wider">Pass</span>
                      </div>
                    </button>
 
                    <button
                      onClick={() => handleActionWithSound('take')}
-                     className="flex-1 bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white rounded-2xl font-bold text-xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-3 border-b-4 border-green-900"
+                     className="flex-1 bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all active:scale-95 flex flex-col items-center justify-center gap-2"
                    >
-                     <div className="p-3 bg-white/20 rounded-full">
-                        <CheckCircle size={32} />
+                     <div className="p-3 bg-white/20 rounded-xl">
+                        <CheckCircle size={28} />
                      </div>
-                     <div>
-                        <span className="block text-sm opacity-80 mb-0.5">프로젝트 & 팟 수령</span>
-                        TAKE
+                     <div className="text-center">
+                        <span className="block text-[10px] text-white/70 mb-1">Claim Project & Pot</span>
+                        <span className="uppercase tracking-wider">Take</span>
                      </div>
                    </button>
                 </div>
-                <button
-                  onClick={handleGetAdvice}
-                  disabled={!canUseAdvice}
-                  className={`w-full py-4 border rounded-xl font-bold flex items-center justify-center gap-2 transition-colors
-                    ${canUseAdvice
-                      ? 'bg-indigo-600/10 text-indigo-400 border-indigo-500/30 hover:bg-indigo-600/20'
-                      : 'bg-zinc-800/50 text-zinc-600 border-zinc-700 cursor-not-allowed'}
-                  `}
-                >
-                   <Cpu size={20} /> AI 전략 조언 받기
-                   <span className={`ml-2 px-2 py-0.5 rounded text-xs font-mono ${canUseAdvice ? 'bg-indigo-900/50 text-indigo-300' : 'bg-zinc-700 text-zinc-500'}`}>
-                     {currentAiUsage}/{MAX_AI_ADVICE_PER_TEAM}
-                   </span>
-                </button>
              </>
            ) : (
-             <div className="h-full flex items-center justify-center bg-zinc-900/30 rounded-3xl border-2 border-zinc-800 border-dashed p-8">
+             <div className="h-32 flex items-center justify-center glass-dark rounded-2xl">
                 <div className="text-center">
-                    <div className="w-3 h-3 bg-red-500 rounded-full mx-auto mb-4 animate-ping"></div>
-                    <p className="text-zinc-400 text-lg font-bold mb-1">
-                       다른 팀이 고민 중입니다
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></div>
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping delay-100"></div>
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping delay-200"></div>
+                    </div>
+                    <p className="text-zinc-400 text-sm font-semibold mb-1">
+                       Waiting for Team {players[gameState.currentPlayerIndex]?.colorIdx + 1}
                     </p>
-                    <p className="text-zinc-600 text-sm">
-                       현재 차례: <span className="text-zinc-300 font-bold">{players[gameState.currentPlayerIndex]?.colorIdx + 1}팀</span>
+                    <p className="text-zinc-600 text-xs">
+                       Analyze the situation while waiting
                     </p>
                 </div>
              </div>
@@ -318,16 +377,18 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
        {/* Advice Modal */}
        {showAdviceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-zinc-800 w-full max-w-sm rounded-2xl border border-zinc-600 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-4 border-b border-zinc-700 bg-zinc-900 flex justify-between items-center">
-              <h3 className="font-bold text-white flex items-center gap-2"><Cpu size={18} className="text-indigo-400"/> AI 전략 분석</h3>
-              <button onClick={() => setShowAdviceModal(false)} className="p-1 hover:bg-zinc-800 rounded-full"><XCircle className="text-zinc-400" size={20}/></button>
+          <div className="glass w-full max-w-sm rounded-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-white/10 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 flex justify-between items-center">
+              <h3 className="font-semibold text-white flex items-center gap-2"><Sparkles size={18} className="text-indigo-400"/> AI Strategic Analysis</h3>
+              <button onClick={() => setShowAdviceModal(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"><XCircle className="text-zinc-400" size={18}/></button>
             </div>
             <div className="p-6 text-sm leading-relaxed text-zinc-200 overflow-y-auto flex-1">
                {loadingAdvice ? (
                  <div className="flex flex-col items-center justify-center py-8 gap-4 text-zinc-500">
-                    <Loader2 size={32} className="text-indigo-500 animate-spin" />
-                    <span className="animate-pulse">데이터 분석 및 전략 수립 중...</span>
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                      <Loader2 size={24} className="text-white animate-spin" />
+                    </div>
+                    <span className="text-sm">Analyzing strategic options...</span>
                  </div>
                ) : (
                  <div className="prose prose-invert prose-sm">
