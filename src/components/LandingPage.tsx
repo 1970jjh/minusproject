@@ -42,6 +42,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [adminError, setAdminError] = useState('');
   const [roomName, setRoomName] = useState('전략 포지셔닝: 메인 매치');
   const [maxTeams, setMaxTeams] = useState(MAX_PLAYERS);
+  const [geminiApiKey, setGeminiApiKey] = useState('');
 
   // Subscribe to rooms list
   useEffect(() => {
@@ -103,7 +104,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
     e.preventDefault();
     onJoinAsAdmin({
       roomName,
-      maxTeams
+      maxTeams,
+      geminiApiKey: geminiApiKey.trim() || undefined
     });
   };
 
@@ -401,6 +403,21 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   onChange={(e) => setMaxTeams(Number(e.target.value))}
                   className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 text-sm"
                 />
+              </div>
+              <div>
+                <label className="block text-zinc-500 text-[10px] font-bold mb-1 uppercase tracking-wider">
+                  Gemini API Key <span className="text-zinc-600">(AI 조언 기능용, 선택)</span>
+                </label>
+                <input
+                  type="password"
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
+                  placeholder="API 키를 입력하면 AI 조언 기능이 활성화됩니다"
+                  className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500 text-sm placeholder-zinc-700"
+                />
+                <p className="text-[10px] text-zinc-600 mt-1">
+                  Google AI Studio에서 API 키를 발급받으세요
+                </p>
               </div>
             </div>
 

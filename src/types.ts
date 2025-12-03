@@ -24,6 +24,7 @@ export interface LogEntry {
 export interface GameConfig {
   roomName: string;
   maxTeams: number;
+  geminiApiKey?: string; // Optional API key for AI advice feature
 }
 
 export const MAX_TEAM_MEMBERS = 20;
@@ -39,6 +40,8 @@ export interface GameState {
   phase: GamePhase;
   logs: LogEntry[];
   turnCount: number;
+  lastPassedPlayerIndex: number | null; // Track which player just passed
+  aiAdviceUsage: { [teamId: string]: number }; // Track AI advice usage per team (max 5)
 }
 
 // Network Types

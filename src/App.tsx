@@ -58,6 +58,8 @@ const App: React.FC = () => {
           turnCount: newGameState.turnCount || 1,
           currentPlayerIndex: newGameState.currentPlayerIndex || 0,
           phase: newGameState.phase || GamePhase.LOBBY,
+          lastPassedPlayerIndex: newGameState.lastPassedPlayerIndex ?? null,
+          aiAdviceUsage: newGameState.aiAdviceUsage || {},
         };
         setGameState(safeGameState);
       }
@@ -203,6 +205,7 @@ const App: React.FC = () => {
           <PlayerView
             gameState={gameState}
             playerId={adminViewingPlayerId}
+            roomId={currentRoomId}
             onAction={sendAdminAction}
             isAdmin={true}
             onReturnToAdmin={() => setAdminViewingPlayerId(null)}
@@ -222,6 +225,7 @@ const App: React.FC = () => {
         <PlayerView
           gameState={gameState}
           playerId={myPlayerId}
+          roomId={currentRoomId}
           onAction={sendAction}
         />
       )}
