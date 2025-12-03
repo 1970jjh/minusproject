@@ -39,7 +39,11 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
   };
 
   const players = gameState.players || [];
-  const me = players.find(p => p.id === playerId);
+  // Find team by checking if playerId is in the team's memberIds array
+  const me = players.find(p => {
+    const memberIds = p.memberIds || [p.id];
+    return memberIds.includes(playerId);
+  });
 
   // -- Error / Loading States --
   if (!me) {
@@ -83,11 +87,13 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
     );
   }
 
-  const isMyTurn = players[gameState.currentPlayerIndex]?.id === playerId && gameState.phase === GamePhase.PLAYING;
+  // Check if it's my team's turn (using team id, not individual playerId)
+  const isMyTurn = me && players[gameState.currentPlayerIndex]?.id === me.id && gameState.phase === GamePhase.PLAYING;
   const colorTheme = TEAM_COLORS[me.colorIdx % TEAM_COLORS.length];
 
-  // Get current AI advice usage for this team
-  const currentAiUsage = gameState.aiAdviceUsage?.[playerId] || 0;
+  // Get current AI advice usage for this team (use team id, not individual player id)
+  const teamId = me.id;
+  const currentAiUsage = gameState.aiAdviceUsage?.[teamId] || 0;
   const remainingAdvice = MAX_AI_ADVICE_PER_TEAM - currentAiUsage;
   const canUseAdvice = remainingAdvice > 0 && gameState.phase === GamePhase.PLAYING;
 
@@ -105,15 +111,15 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
     setLoadingAdvice(true);
     setShowAdviceModal(true);
 
-    // Update usage in Firebase first
-    const usageResult = await updateAiAdviceUsage(roomId, playerId);
+    // Update usage in Firebase first (use teamId for tracking)
+    const usageResult = await updateAiAdviceUsage(roomId, teamId);
     if (!usageResult.success) {
       setAdvice(`AI 조언 사용 횟수를 모두 소진했습니다. (${usageResult.currentUsage}/${MAX_AI_ADVICE_PER_TEAM})`);
       setLoadingAdvice(false);
       return;
     }
 
-    const result = await getStrategicAdvice(gameState, playerId);
+    const result = await getStrategicAdvice(gameState, teamId);
     setAdvice(result);
     setLoadingAdvice(false);
   };
@@ -258,7 +264,7 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
             </div>
             <div className="space-y-2">
                 {[...players]
-                    .filter(p => p.id !== playerId)
+                    .filter(p => p.id !== teamId)
                     .sort((a, b) => a.colorIdx - b.colorIdx)
                     .map(player => {
                         const isCurrentTurn = players[gameState.currentPlayerIndex]?.id === player.id;

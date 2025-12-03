@@ -104,6 +104,7 @@ export const joinRoom = async (
     // Join existing team
     const existingTeam = players[existingTeamIndex];
     const members = existingTeam.members || [existingTeam.name];
+    const memberIds = existingTeam.memberIds || [existingTeam.id];
 
     // Check if team is full
     if (members.length >= MAX_TEAM_MEMBERS) {
@@ -111,15 +112,16 @@ export const joinRoom = async (
       return false;
     }
 
-    // Check if member already exists in team
-    if (members.includes(playerInfo.name)) {
+    // Check if member ID already exists in team (already joined)
+    if (memberIds.includes(playerInfo.id)) {
       return true; // Already joined
     }
 
-    // Add member to existing team
+    // Add member to existing team (add both name and ID)
     const updatedTeam = {
       ...existingTeam,
-      members: [...members, playerInfo.name]
+      members: [...members, playerInfo.name],
+      memberIds: [...memberIds, playerInfo.id]
     };
 
     const updatedPlayers = [...players];
@@ -146,7 +148,8 @@ export const joinRoom = async (
       cards: [],
       score: STARTING_CHIPS,
       isOnline: true,
-      members: [playerInfo.name]
+      members: [playerInfo.name],
+      memberIds: [playerInfo.id]
     };
 
     const updatedPlayers = [...players, newTeam];

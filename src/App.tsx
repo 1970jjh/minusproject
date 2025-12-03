@@ -47,6 +47,7 @@ const App: React.FC = () => {
           chips: p.chips ?? 0,
           score: p.score ?? 0,
           members: p.members || [p.name],
+          memberIds: p.memberIds || [p.id],
         }));
 
         // Ensure gameState always has valid structure
@@ -141,8 +142,16 @@ const App: React.FC = () => {
     const players = gameState.players || [];
     if (players.length === 0) return;
 
+    // Find the team that contains this playerId (check memberIds array)
+    const myTeam = players.find(p => {
+      const memberIds = p.memberIds || [p.id];
+      return memberIds.includes(playerId);
+    });
+
+    if (!myTeam) return;
+
     const currentPlayer = players[gameState.currentPlayerIndex];
-    if (!currentPlayer || currentPlayer.id !== playerId) return;
+    if (!currentPlayer || currentPlayer.id !== myTeam.id) return;
 
     const nextState = processTurn(gameState, action);
 
