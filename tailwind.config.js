@@ -7,7 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Noto Sans KR', 'Inter', 'sans-serif'],
+        sans: ['Space Grotesk', 'Noto Sans KR', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
