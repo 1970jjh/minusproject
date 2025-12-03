@@ -2,11 +2,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GameState } from "../types";
 import { CHIP_UNIT } from "../constants";
 
-// Get Gemini API client with API key
-const getClient = (apiKeyFromConfig?: string) => {
-    const apiKey = apiKeyFromConfig || import.meta.env.VITE_GEMINI_API_KEY;
+// Models to use
+const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis
+const GEMINI_VISION_MODEL = "gemini-1.5-flash";  // For image analysis
+
+// Get Gemini API client with API key from environment variable
+const getClient = () => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-        console.error("Gemini API key is not configured");
+        console.error("Gemini API key is not configured. Set VITE_GEMINI_API_KEY in .env");
         return null;
     }
     return new GoogleGenerativeAI(apiKey);
@@ -14,13 +18,12 @@ const getClient = (apiKeyFromConfig?: string) => {
 
 export const getStrategicAdvice = async (gameState: GameState, myTeamId: string): Promise<string> => {
   try {
-    const apiKey = gameState.config?.geminiApiKey;
-    const genAI = getClient(apiKey);
+    const genAI = getClient();
     if (!genAI) {
-        return "API 키가 설정되지 않았습니다. 관리자에게 문의하세요.";
+        return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_TEXT_MODEL });
 
     // Find team by ID
     const me = gameState.players.find(p => p.id === myTeamId);
@@ -81,13 +84,12 @@ ${allPlayersInfo}
 
 export const generateGameAnalysis = async (gameState: GameState): Promise<string> => {
   try {
-    const apiKey = gameState.config?.geminiApiKey;
-    const genAI = getClient(apiKey);
+    const genAI = getClient();
     if (!genAI) {
-      return "API 키가 설정되지 않았습니다. 관리자에게 문의하세요.";
+      return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_TEXT_MODEL });
 
     const rankedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
     const winner = rankedPlayers[0];
@@ -164,13 +166,13 @@ export const generateWinnerPoster = async (
   mimeType: string
 ): Promise<string> => {
   try {
-    const apiKey = gameState.config?.geminiApiKey;
-    const genAI = getClient(apiKey);
+    const genAI = getClient();
     if (!genAI) {
-      throw new Error("API 키가 설정되지 않았습니다.");
+      throw new Error("API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.");
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use gemini-1.5-flash for image analysis (multimodal)
+    const model = genAI.getGenerativeModel({ model: GEMINI_VISION_MODEL });
     const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
     const memberNames = winner.members?.join(', ') || winner.name;
 
@@ -214,13 +216,12 @@ export const generateWinnerPoster = async (
 
 export const generatePosterDescription = async (gameState: GameState): Promise<string> => {
   try {
-    const apiKey = gameState.config?.geminiApiKey;
-    const genAI = getClient(apiKey);
+    const genAI = getClient();
     if (!genAI) {
-      return "API 키가 설정되지 않았습니다.";
+      return "API 키가 설정되지 않았습니다. 환경변수 VITE_GEMINI_API_KEY를 확인하세요.";
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: GEMINI_TEXT_MODEL });
     const winner = [...gameState.players].sort((a, b) => b.score - a.score)[0];
     const memberNames = winner.members?.join(', ') || winner.name;
 

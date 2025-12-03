@@ -15,7 +15,6 @@ import {
   startGame,
   resetGame,
   generatePlayerId,
-  checkPlayerInRoom,
   Room
 } from './services/roomService';
 
@@ -35,42 +34,10 @@ const App: React.FC = () => {
   const [showRules, setShowRules] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  // Session persistence: restore player session from localStorage on mount
+  // Clear any stale session on app load - always start fresh
   useEffect(() => {
-    const restoreSession = async () => {
-      const savedSession = localStorage.getItem('playerSession');
-      if (savedSession) {
-        try {
-          const session = JSON.parse(savedSession);
-          if (session.playerId && session.roomId) {
-            // Verify the room exists and player is still in it
-            const playerExists = await checkPlayerInRoom(session.roomId, session.playerId);
-            if (playerExists) {
-              setMyPlayerId(session.playerId);
-              setCurrentRoomId(session.roomId);
-              setRole('PLAYER');
-            } else {
-              // Room or player no longer exists, clear session
-              localStorage.removeItem('playerSession');
-            }
-          }
-        } catch (e) {
-          localStorage.removeItem('playerSession');
-        }
-      }
-    };
-    restoreSession();
+    localStorage.removeItem('playerSession');
   }, []);
-
-  // Save session to localStorage when player joins
-  useEffect(() => {
-    if (role === 'PLAYER' && myPlayerId && currentRoomId) {
-      localStorage.setItem('playerSession', JSON.stringify({
-        playerId: myPlayerId,
-        roomId: currentRoomId
-      }));
-    }
-  }, [role, myPlayerId, currentRoomId]);
 
   // Subscribe to game state changes when in a room
   useEffect(() => {
