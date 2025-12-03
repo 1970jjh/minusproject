@@ -53,12 +53,13 @@ export const createInitialGameState = (
   const hiddenCard = fullDeck.pop() || null;
   const currentCard = fullDeck.pop() || null;
 
-  // Reset players for new game
+  // Reset players for new game (preserve team members)
   const resetPlayers = players.map(p => ({
     ...p,
     chips: STARTING_CHIPS,
     cards: [],
-    score: STARTING_CHIPS
+    score: STARTING_CHIPS,
+    members: p.members || [p.name]
   }));
 
   return {

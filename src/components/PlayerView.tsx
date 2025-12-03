@@ -3,6 +3,7 @@ import { GameState, GamePhase, Player } from '../types';
 import { CHIP_UNIT, TEAM_COLORS } from '../constants';
 import Chip from './Chip';
 import { getStrategicAdvice } from '../services/geminiService';
+import { playVoiceEffect, initializeSpeech } from '../services/soundService';
 import { Cpu, XCircle, CheckCircle, Home, Loader2, LogOut, Eye } from 'lucide-react';
 
 interface PlayerViewProps {
@@ -23,6 +24,17 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
     const timer = setInterval(() => setConnectionTime(prev => prev + 1), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Initialize speech synthesis
+  useEffect(() => {
+    initializeSpeech();
+  }, []);
+
+  // Handle action with sound effect
+  const handleActionWithSound = (action: 'pass' | 'take') => {
+    playVoiceEffect(action === 'pass' ? 'PASS' : 'TAKE');
+    onAction(action);
+  };
 
   const players = gameState.players || [];
   const me = players.find(p => p.id === playerId);
@@ -104,8 +116,8 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
             팀원들과 전략을 상의하세요.
         </p>
         <div className="w-full max-w-xs p-6 bg-zinc-900 rounded-2xl border border-zinc-800">
-           <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">MY TEAM</p>
-           <p className={`text-2xl font-bold ${colorTheme.text}`}>{me.name}</p>
+           <p className="text-xs text-zinc-500 tracking-widest mb-2">나의 팀</p>
+           <p className={`text-2xl font-bold ${colorTheme.text}`}>{me.colorIdx + 1}팀</p>
         </div>
       </div>
     );
@@ -124,17 +136,18 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
          <div className="relative z-10 flex justify-between items-start">
             <div>
                <h1 className="text-3xl font-black flex items-center gap-2 tracking-tight">
-                 {me.name}
+                 {me.colorIdx + 1}팀
                </h1>
                <div className="mt-4 flex items-center gap-3">
                  <div className="bg-black/30 backdrop-blur-md px-5 py-2.5 rounded-2xl flex items-center gap-2 border border-white/10">
                     <Chip count={1} className="scale-90" />
                     <span className="text-2xl font-mono font-bold text-white">{me.chips}{CHIP_UNIT}</span>
                  </div>
+                 <span className="text-xs text-white/60">현재 자원</span>
                </div>
             </div>
             <div className="text-right">
-               <div className="text-[10px] text-white/80 uppercase tracking-widest mb-1 font-bold">Estimated Score</div>
+               <div className="text-[10px] text-white/80 tracking-widest mb-1 font-bold">현재 수익</div>
                <div className={`text-3xl font-black ${me.score < 0 ? 'text-white' : 'text-white'} drop-shadow-md`}>
                  {me.score}억
                </div>
@@ -180,12 +193,12 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
            {isMyTurn ? (
              <>
                 <div className="flex gap-4 h-36">
-                   <button 
-                     onClick={() => onAction('pass')}
+                   <button
+                     onClick={() => handleActionWithSound('pass')}
                      disabled={me.chips <= 0}
                      className={`flex-1 rounded-2xl font-bold text-xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-3 border-b-4
-                       ${me.chips > 0 
-                         ? 'bg-zinc-800 hover:bg-zinc-700 text-red-400 border-zinc-950' 
+                       ${me.chips > 0
+                         ? 'bg-zinc-800 hover:bg-zinc-700 text-red-400 border-zinc-950'
                          : 'bg-zinc-900 text-zinc-700 border-zinc-950 opacity-50 cursor-not-allowed'}
                      `}
                    >
@@ -197,9 +210,9 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
                         PASS
                      </div>
                    </button>
-                   
-                   <button 
-                     onClick={() => onAction('take')}
+
+                   <button
+                     onClick={() => handleActionWithSound('take')}
                      className="flex-1 bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white rounded-2xl font-bold text-xl shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center gap-3 border-b-4 border-green-900"
                    >
                      <div className="p-3 bg-white/20 rounded-full">
@@ -226,7 +239,7 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, onAction, 
                        다른 팀이 고민 중입니다
                     </p>
                     <p className="text-zinc-600 text-sm">
-                       Turn: <span className="text-zinc-300 font-bold">{players[gameState.currentPlayerIndex]?.name}</span>
+                       현재 차례: <span className="text-zinc-300 font-bold">{players[gameState.currentPlayerIndex]?.colorIdx + 1}팀</span>
                     </p>
                 </div>
              </div>
