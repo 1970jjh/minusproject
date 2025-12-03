@@ -1,6 +1,6 @@
 
 export interface Player {
-  id: string; // team id
+  id: string; // team id (first member's id for backward compatibility)
   name: string; // team name (first member's name or custom)
   colorIdx: number;
   chips: number;
@@ -8,6 +8,7 @@ export interface Player {
   score: number;
   isOnline: boolean;
   members: string[]; // Array of member names in this team
+  memberIds: string[]; // Array of all member IDs in this team
 }
 
 export enum GamePhase {
