@@ -241,14 +241,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
                             )}
                             <button
                               onClick={() => handleSelectRoom(room)}
-                              disabled={room.playerCount >= room.config.maxTeams}
-                              className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 ${
-                                room.playerCount >= room.config.maxTeams
-                                  ? 'bg-zinc-900 text-zinc-600 border-zinc-800 cursor-not-allowed'
-                                  : 'bg-zinc-800 hover:bg-zinc-700 hover:text-purple-400 text-zinc-300 border-zinc-700'
-                              }`}
+                              className="flex-1 py-3 rounded-lg text-sm font-bold transition-all border flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 hover:text-purple-400 text-zinc-300 border-zinc-700"
                             >
-                              {room.playerCount >= room.config.maxTeams ? 'FULL' : '참가하기'}
+                              참가하기
                             </button>
                           </div>
                         )}
