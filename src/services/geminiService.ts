@@ -3,8 +3,8 @@ import { GameState } from "../types";
 import { CHIP_UNIT } from "../constants";
 
 // Models to use
-const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis/reports
-const IMAGEN_MODEL = "imagen-3.0-generate-001";  // For image generation
+const GEMINI_TEXT_MODEL = "gemini-2.0-flash";  // For text analysis/reports
+const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-exp";  // For image generation
 
 // Get Gemini API client with API key from environment variable
 const getClient = (): GoogleGenAI | null => {
@@ -205,22 +205,22 @@ Background: luxurious casino/auction house with dramatic shadows.
 Style: high contrast, cinematic color grading, premium quality, dramatic lighting.
 Mood: triumphant, prestigious, exclusive.`;
 
-    // Use Imagen 3 generateImages method
-    const response = await ai.models.generateImages({
-      model: IMAGEN_MODEL,
-      prompt: imagePrompt,
+    // Use Gemini experimental model for image generation
+    const response = await ai.models.generateContent({
+      model: GEMINI_IMAGE_MODEL,
+      contents: imagePrompt,
       config: {
-        numberOfImages: 1,
-        aspectRatio: "9:16",  // Portrait for poster
+        responseModalities: ["image", "text"],
       }
     });
 
-    // Get the generated image as base64
-    if (response.generatedImages && response.generatedImages.length > 0) {
-      const imageBytes = response.generatedImages[0].image?.imageBytes;
-      if (imageBytes) {
-        // Return as data URL for display in browser
-        return `data:image/png;base64,${imageBytes}`;
+    // Extract image from response
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData && part.inlineData.data) {
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${part.inlineData.data}`;
+        }
       }
     }
 
