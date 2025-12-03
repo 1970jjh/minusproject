@@ -317,24 +317,27 @@ export const generateWinnerPoster = async (
       const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
       const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
 
-      imagePrompt = `Transform this team photo into an epic Olympic-style victory celebration poster!
+      imagePrompt = `Edit this team photo to create an Olympic victory celebration scene.
 
-Create a realistic photo of these team members celebrating like Olympic gold medalists:
-- Keep all the original team members' faces exactly as they are in the photo
-- Transform them into a victory celebration scene
-- Everyone wearing shiny gold medals around their necks
-- The team holding up a grand championship trophy together
-- Confetti and golden streamers falling in the background
-- Stadium or award ceremony setting with dramatic lighting
-- Expressions of pure joy and triumph
-- Realistic photographic style (not cartoon or illustration)
+CRITICAL - FACE PRESERVATION:
+- You MUST keep the EXACT faces of every person in this photo
+- Do NOT generate new faces or replace any person
+- Each person's facial features, skin tone, hair style must remain IDENTICAL to the original
+- The number of people must be exactly the same as the input photo
 
-Text overlay:
-- Top: "TEAM ${winner.colorIdx + 1} CHAMPIONS" in bold golden metallic text
-- Bottom: "STRATEGIC POSITIONING MASTERS" in elegant white text
-- Score: "${Math.abs(winner.score)} BILLION" displayed prominently
+TRANSFORMATION:
+- Keep the original people but change their setting to a victory celebration
+- Add gold medals hanging around each person's neck
+- Add a championship trophy that the team is holding together
+- Change the background to a stadium with confetti and golden streamers
+- Add dramatic celebration lighting
+- Keep it realistic and photographic
 
-Style: Realistic, cinematic, celebratory, like an official Olympic victory photo`;
+TEXT OVERLAY:
+- Top: "TEAM ${winner.colorIdx + 1} CHAMPIONS" in golden text
+- Bottom: "${Math.abs(winner.score)} BILLION" and "STRATEGIC POSITIONING MASTERS"
+
+The faces in the output MUST be recognizable as the same people from the input photo.`;
 
       contents = [
         {
