@@ -174,20 +174,24 @@ ${teamsInfo}
 이번 시뮬레이션의 핵심 인사이트를 3-4문장으로 요약해주세요. 어떤 전략이 효과적이었고, 어떤 팀이 왜 성공/실패했는지 한눈에 파악할 수 있도록 작성해주세요.
 [/SECTION]
 
-[SECTION:초기 형성 시장 (Early Market)]
-게임 초반(라운드 1-${Math.floor(gameState.turnCount / 3)}) 각 팀의 포지셔닝 전략을 분석해주세요. 어떤 팀이 초반에 공격적으로 프로젝트를 확보했고, 어떤 팀이 자원을 축적했는지 분석해주세요. 구체적인 수치와 함께 설명해주세요.
+[SECTION:초반 전략 (Early Game Strategy)]
+게임 초반(라운드 1-${Math.floor(gameState.turnCount / 3)}) 각 팀의 시장 진입 전략을 포지셔닝 관점에서 분석해주세요. 어떤 팀이 초반에 공격적으로 프로젝트를 확보하며 특정 영역에 포지셔닝했고, 어떤 팀이 자원을 축적하며 관망 전략을 택했는지 분석해주세요. 초기 시장 진입자(First Mover)와 후발 주자(Late Mover)의 전략적 차이를 구체적인 수치와 함께 설명해주세요.
 [/SECTION]
 
-[SECTION:완전 경쟁 시장 (Perfect Competition)]
-게임 중반의 경쟁 양상을 분석해주세요. 팀들 간의 자원 경쟁이 어떻게 전개되었는지, 동률(Tie) 상황이나 긴장감 있는 순간들을 분석해주세요.
+[SECTION:중반 전략 (Mid Game Strategy)]
+게임 중반의 경쟁 양상을 포지셔닝 관점에서 분석해주세요. 팀들 간의 자원 경쟁이 어떻게 전개되었는지, 각 팀이 어떤 숫자 영역(포지션)을 차지하기 위해 경쟁했는지 분석해주세요. 레드오션(경쟁이 치열한 영역)과 블루오션(미개척 영역)이 어떻게 형성되었는지 설명해주세요.
 [/SECTION]
 
-[SECTION:독점적 경쟁 시장 (Monopolistic Competition)]
-게임 후반에 각 팀이 차별화된 포지션을 어떻게 구축했는지 분석해주세요. 특정 숫자 영역을 독점하려는 시도나 시퀀스 완성을 위한 전략적 움직임을 설명해주세요.
+[SECTION:후반 전략 (Late Game Strategy)]
+게임 후반에 각 팀이 차별화된 포지션을 어떻게 구축했는지 분석해주세요. 특정 숫자 영역을 독점하려는 시도(독점적 포지셔닝), 시퀀스 완성을 위한 전략적 움직임(시너지 포지셔닝), 그리고 최종 순위를 위한 마무리 전략을 설명해주세요.
 [/SECTION]
 
-[SECTION:팀별 전략 평가 (Team Strategy Critique)]
-각 팀의 전략을 개별적으로 상세히 평가해주세요. 각 팀당 3-4문장으로 작성하고, 블루오션/레드오션/퍼플오션 전략 관점에서 분석해주세요:
+[SECTION:팀별 포지셔닝 전략 분석 (Team Positioning Analysis)]
+각 팀의 전략을 포지셔닝 관점에서 개별적으로 상세히 평가해주세요. 각 팀당 3-4문장으로 작성하고, 다음 관점에서 분석해주세요:
+- 블루오션 전략: 경쟁을 피해 새로운 영역을 개척했는가?
+- 레드오션 전략: 기존 경쟁 영역에서 우위를 점했는가?
+- 퍼플오션 전략: 블루오션과 레드오션을 혼합한 전략을 사용했는가?
+- 차별화 포지셔닝: 다른 팀과 어떻게 차별화된 포지션을 구축했는가?
 ${rankedPlayers.map((p, rank) => `
 Team ${p.colorIdx + 1} (${rank + 1}위): 이 팀의 전략적 선택과 그 결과를 분석하세요.`).join('')}
 [/SECTION]
@@ -311,24 +315,32 @@ export const generateWinnerPoster = async (
       const base64Data = teamPhotoBase64.replace(/^data:image\/\w+;base64,/, '');
       const mimeType = teamPhotoBase64.match(/^data:(image\/\w+);base64,/)?.[1] || 'image/jpeg';
 
-      imagePrompt = `Based on this team photo, create a dramatic Netflix Korean drama "Casino" (starring Choi Min-sik) style winner poster.
+      imagePrompt = `Transform this team photo into a cinematic "Market Master" winner poster.
 
-IMPORTANT: Use the faces and people from the provided team photo as the main subjects of the poster.
-Transform them into stylized characters with the "Casino" drama aesthetic.
+CRITICAL REQUIREMENTS - MUST FOLLOW:
+1. PRESERVE ALL PEOPLE EXACTLY: Keep every person from the original photo with their EXACT faces, poses, positions, expressions, and clothing. Do NOT change, replace, or modify any person.
+2. ONLY CHANGE THE BACKGROUND: Replace the original background with a futuristic cyberpunk cityscape.
+3. The people must remain 100% identical to the original photo - same number of people, same positions, same faces.
 
-Style requirements:
-- Dark cinematic atmosphere with neon purple, gold, and deep blue lighting
-- The team members should look like K-drama protagonists in a high-stakes casino/auction setting
-- Keep their actual facial features but enhance with dramatic lighting and styling
-- Add text overlay: "TEAM ${winner.colorIdx + 1} - WINNER" in bold metallic gold font
-- Add subtitle: "Strategic Positioning Champion"
-- Display score: "${winner.score} Billion" prominently
-- Member names: "${memberNames}" in elegant white text at the bottom
-- Background: luxurious VIP casino room or auction house with dramatic shadows and bokeh lights
-- Style: high contrast, cinematic color grading, premium quality, dramatic rim lighting
-- Mood: triumphant, prestigious, powerful, mysterious
+Background style:
+- Futuristic night city skyline with glowing skyscrapers
+- Neon cyan, blue, and purple lighting
+- Holographic displays and digital elements floating in the background
+- Flying vehicles or drones in the distant sky
+- Glass windows reflecting city lights
 
-Make it look like an official Netflix Korea drama poster featuring the actual team members.`;
+Text overlays to add:
+- Top: "TEAM ${winner.colorIdx + 1}" in large bold cyan/blue gradient text
+- Below team number: "TOTAL ASSET: ${Math.abs(winner.score)} BILLION" in smaller text
+- Center/Middle: "MARKET MASTER" as the main title in bold futuristic font
+- Optional: Small holographic UI elements around the edges
+
+Color grading:
+- Cool tones (cyan, blue, purple)
+- High contrast with vibrant neon accents
+- Professional cinematic look
+
+The final image should look like the original team photo was taken in front of a futuristic city backdrop, with all team members preserved exactly as they appear in the original.`;
 
       contents = [
         {
@@ -341,21 +353,27 @@ Make it look like an official Netflix Korea drama poster featuring the actual te
       ];
     } else {
       // No team photo provided - generate without reference
-      imagePrompt = `Create a dramatic Netflix Korean drama "Casino" (starring Choi Min-sik) style winner poster.
+      imagePrompt = `Create a cinematic "Market Master" winner poster without specific people.
 
-Style requirements:
-- Dark cinematic atmosphere with neon purple, gold, and deep blue lighting
-- Create stylized silhouettes or abstract representation of a winning team
-- Add text overlay: "TEAM ${winner.colorIdx + 1} - WINNER" in bold metallic gold font
-- Add subtitle: "Strategic Positioning Champion"
-- Display score: "${winner.score} Billion" prominently
-- Member names: "${memberNames}" in elegant white text at the bottom
-- Background: luxurious VIP casino room or auction house with dramatic shadows, poker chips, and bokeh lights
-- Style: high contrast, cinematic color grading, premium quality, dramatic lighting
-- Include visual elements: gold chips, playing cards, crown symbol
-- Mood: triumphant, prestigious, powerful, mysterious
+Design requirements:
+- Futuristic cyberpunk city background with glowing skyscrapers at night
+- Neon cyan, blue, and purple lighting throughout
+- Holographic displays, charts, and financial data floating in the scene
+- Abstract silhouettes or symbolic representation of victory (trophy, crown, rising graphs)
 
-Make it look like an official Netflix Korea drama promotional poster.`;
+Text overlays:
+- Top: "TEAM ${winner.colorIdx + 1}" in large bold cyan/blue gradient text
+- Below team number: "TOTAL ASSET: ${Math.abs(winner.score)} BILLION" in smaller text
+- Center: "MARKET MASTER" as the main title in bold futuristic font
+- Bottom: "${memberNames}" in elegant white text
+
+Style:
+- Cool tones (cyan, blue, purple) with neon accents
+- High contrast, cinematic color grading
+- Professional, premium quality
+- Mood: triumphant, futuristic, powerful
+
+Make it look like a professional game/competition winner announcement poster.`;
 
       contents = imagePrompt;
     }
