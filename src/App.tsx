@@ -34,6 +34,33 @@ const App: React.FC = () => {
   const [showRules, setShowRules] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
+  // Session persistence: restore player session from localStorage on mount
+  useEffect(() => {
+    const savedSession = localStorage.getItem('playerSession');
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession);
+        if (session.playerId && session.roomId) {
+          setMyPlayerId(session.playerId);
+          setCurrentRoomId(session.roomId);
+          setRole('PLAYER');
+        }
+      } catch (e) {
+        localStorage.removeItem('playerSession');
+      }
+    }
+  }, []);
+
+  // Save session to localStorage when player joins
+  useEffect(() => {
+    if (role === 'PLAYER' && myPlayerId && currentRoomId) {
+      localStorage.setItem('playerSession', JSON.stringify({
+        playerId: myPlayerId,
+        roomId: currentRoomId
+      }));
+    }
+  }, [role, myPlayerId, currentRoomId]);
+
   // Subscribe to game state changes when in a room
   useEffect(() => {
     if (!currentRoomId) return;
