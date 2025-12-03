@@ -4,7 +4,7 @@ import { CHIP_UNIT } from "../constants";
 
 // Models to use
 const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis/reports
-const IMAGEN_MODEL = "imagen-3.0-generate-002";  // For image generation
+const IMAGEN_MODEL = "imagen-3.0-generate-001";  // For image generation
 
 // Get Gemini API client with API key from environment variable
 const getClient = (): GoogleGenAI | null => {
