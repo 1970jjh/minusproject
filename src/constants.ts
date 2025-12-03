@@ -1,10 +1,21 @@
 
-export const STARTING_CHIPS = 9; // 9억
+export const STARTING_CHIPS = 9; // 기본값 9억 (로비용)
 export const CHIP_UNIT = "억";
 export const MIN_CARD_VALUE = 26; // -26 Project
 export const MAX_CARD_VALUE = 50; // -50 Project
 export const MIN_PLAYERS = 4;
 export const MAX_PLAYERS = 12;
+
+// 팀 수에 따른 초기 칩 금액 계산
+export const getStartingChipsByTeamCount = (teamCount: number): number => {
+  if (teamCount <= 6) {
+    return 12; // 6팀 이하: 12억
+  } else if (teamCount <= 8) {
+    return 10; // 7~8팀: 10억
+  } else {
+    return 8;  // 9팀 이상: 8억
+  }
+};
 
 export const TEAM_COLORS = [
   { name: 'Red', bg: 'bg-red-600', border: 'border-red-400', text: 'text-red-100' },

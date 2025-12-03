@@ -1,6 +1,6 @@
 
 import { GameState, Player, GamePhase, LogEntry, GameConfig } from '../types';
-import { STARTING_CHIPS, MIN_CARD_VALUE, MAX_CARD_VALUE, CHIP_UNIT, MAX_PLAYERS } from '../constants';
+import { MIN_CARD_VALUE, MAX_CARD_VALUE, CHIP_UNIT, MAX_PLAYERS, getStartingChipsByTeamCount } from '../constants';
 
 export const AI_DECISION_DELAY_MS = 1500;
 
@@ -53,12 +53,15 @@ export const createInitialGameState = (
   const hiddenCard = fullDeck.pop() || null;
   const currentCard = fullDeck.pop() || null;
 
+  // 팀 수에 따른 초기 칩 금액 계산
+  const startingChips = getStartingChipsByTeamCount(players.length);
+
   // Reset players for new game (preserve team members)
   const resetPlayers = players.map(p => ({
     ...p,
-    chips: STARTING_CHIPS,
+    chips: startingChips,
     cards: [],
-    score: STARTING_CHIPS,
+    score: startingChips,
     members: p.members || [p.name]
   }));
 
@@ -71,7 +74,7 @@ export const createInitialGameState = (
     pot: 0,
     currentPlayerIndex: Math.floor(Math.random() * (resetPlayers.length || 1)),
     phase: GamePhase.PLAYING,
-    logs: [{ turn: 0, message: "게임이 시작되었습니다! -26억 ~ -50억 프로젝트 경매가 진행됩니다." }],
+    logs: [{ turn: 0, message: `게임이 시작되었습니다! 각 팀 시작 자원: ${startingChips}억 (${players.length}팀 참여)` }],
     turnCount: 1,
     lastPassedPlayerIndex: null,
     aiAdviceUsage: {}
