@@ -6,10 +6,11 @@ export const AI_DECISION_DELAY_MS = 1500;
 
 // Helper to calculate score based on sequence rules
 export const calculateScore = (player: Player): number => {
-  if (player.cards.length === 0) return player.chips;
+  const cards = player.cards || [];
+  if (cards.length === 0) return player.chips || 0;
 
   // Sort cards ascending (e.g. -50, -49, ... -26)
-  const sortedCards = [...player.cards].sort((a, b) => a - b);
+  const sortedCards = [...cards].sort((a, b) => a - b);
 
   let cardSum = 0;
   
@@ -28,7 +29,7 @@ export const calculateScore = (player: Player): number => {
     }
   }
 
-  return cardSum + player.chips;
+  return cardSum + (player.chips || 0);
 };
 
 // Initialize with empty players list (Lobby mode)
@@ -79,13 +80,18 @@ export const isGameFinished = (state: GameState): boolean => {
 };
 
 export const processTurn = (
-  currentState: GameState, 
+  currentState: GameState,
   action: 'pass' | 'take'
 ): GameState => {
   const state = { ...currentState };
-  const playerIndex = state.currentPlayerIndex;
-  const player = { ...state.players[playerIndex] };
-  
+  const players = state.players || [];
+  const playerIndex = state.currentPlayerIndex || 0;
+  const player = { ...players[playerIndex] };
+
+  // Ensure player.cards is always an array
+  player.cards = player.cards || [];
+  player.chips = player.chips || 0;
+
   const logMessagePrefix = `[${player.name}] 팀`;
   let newLog: LogEntry;
 
@@ -98,15 +104,15 @@ export const processTurn = (
     // Logic: Pay 1 chip
     player.chips -= 1;
     player.score = calculateScore(player);
-    state.pot += 1;
-    
+    state.pot = (state.pot || 0) + 1;
+
     state.players[playerIndex] = player;
-    state.currentPlayerIndex = (playerIndex + 1) % state.players.length;
-    
-    newLog = { turn: state.turnCount, message: `${logMessagePrefix}이(가) PASS 했습니다. (자원 -1${CHIP_UNIT})` };
+    state.currentPlayerIndex = (playerIndex + 1) % players.length;
+
+    newLog = { turn: state.turnCount || 1, message: `${logMessagePrefix}이(가) PASS 했습니다. (자원 -1${CHIP_UNIT})` };
   } else {
     // Logic: Take card + pot
-    player.chips += state.pot;
+    player.chips += state.pot || 0;
     player.cards = [...player.cards, state.currentCard!].sort((a, b) => a - b);
     player.score = calculateScore(player);
     
