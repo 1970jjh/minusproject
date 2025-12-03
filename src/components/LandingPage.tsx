@@ -262,17 +262,17 @@ const LandingPage: React.FC<LandingPageProps> = ({
               </p>
             </div>
 
-            <h3 className="text-2xl font-bold text-white mb-1">팀 프로필 설정</h3>
-            <p className="text-xs text-zinc-500 mb-6">입찰에 참여할 팀 정보를 입력하세요.</p>
+            <h3 className="text-2xl font-bold text-white mb-1">참가자 정보 설정</h3>
+            <p className="text-xs text-zinc-500 mb-6">게임에 참여할 정보를 입력하세요.</p>
 
             <div className="mb-6">
-              <label className="block text-zinc-400 text-[10px] font-bold uppercase mb-2 tracking-wider">Team Name</label>
+              <label className="block text-zinc-400 text-[10px] font-bold uppercase mb-2 tracking-wider">Your Name</label>
               <input
                 type="text"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
                 className="w-full bg-black border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors text-base placeholder-zinc-700"
-                placeholder="팀 이름 입력"
+                placeholder="이름을 입력하세요"
                 maxLength={8}
                 required
                 autoFocus
@@ -280,15 +280,17 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <div className="mb-8">
-              <label className="block text-zinc-400 text-[10px] font-bold uppercase mb-3 tracking-wider">Team Color</label>
+              <label className="block text-zinc-400 text-[10px] font-bold uppercase mb-3 tracking-wider">Select Team</label>
               <div className="grid grid-cols-6 gap-3">
                 {TEAM_COLORS.map((color, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setSelectedColor(idx)}
-                    className={`aspect-square rounded-full ${color.bg} border-2 transition-transform ${selectedColor === idx ? 'border-white scale-110 ring-2 ring-white/20' : 'border-transparent opacity-30 hover:opacity-70'}`}
-                  />
+                    className={`aspect-square rounded-full ${color.bg} border-2 transition-transform flex items-center justify-center font-bold text-white text-sm ${selectedColor === idx ? 'border-white scale-110 ring-2 ring-white/20' : 'border-transparent opacity-50 hover:opacity-80'}`}
+                  >
+                    {idx + 1}
+                  </button>
                 ))}
               </div>
             </div>
