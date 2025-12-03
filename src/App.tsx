@@ -5,7 +5,7 @@ import AdminView from './components/AdminView';
 import PlayerView from './components/PlayerView';
 import LandingPage from './components/LandingPage';
 import Modal from './components/Modal';
-import { HelpCircle } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import {
   createRoom,
   joinRoom,
@@ -227,13 +227,17 @@ const App: React.FC = () => {
       )}
 
       {/* Floating Rules Button */}
-      <button
-        onClick={() => setShowRules(true)}
-        className="fixed bottom-4 right-4 z-50 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white p-3 rounded-full shadow-lg border border-zinc-600 transition-all"
-        title="게임 규칙"
-      >
-        <HelpCircle size={24} />
-      </button>
+      <div className="fixed bottom-4 right-4 z-50 group">
+        <button
+          onClick={() => setShowRules(true)}
+          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white p-3 rounded-xl shadow-lg border border-zinc-600 transition-all hover:scale-105"
+        >
+          <BookOpen size={24} />
+        </button>
+        <span className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          규칙
+        </span>
+      </div>
 
       {showRules && (
         <Modal title="규칙: 마이너스 프로젝트 경매" onClose={() => setShowRules(false)}>
@@ -256,10 +260,49 @@ const App: React.FC = () => {
 
             <div className="bg-zinc-900/50 p-6 rounded-xl border border-zinc-700">
               <h3 className="text-xl font-bold text-white mb-4">🌟 히든 룰: 연속 숫자</h3>
-              <p className="mb-2">연속된 숫자의 프로젝트를 모으면, <strong className="text-green-400">절대값이 가장 작은 숫자</strong>만 부채로 계산됩니다.</p>
-              <div className="bg-black/40 p-3 rounded text-sm font-mono text-zinc-400">
-                예시: <span className="text-red-400">-30, -31, -32</span> 보유 시 <br/>
-                → <span className="text-white">-30</span>만 계산 (-31, -32는 무효화되어 부채 감소)
+              <p className="mb-4">연속된 숫자의 프로젝트를 모으면, <strong className="text-green-400">절대값이 가장 작은 숫자</strong>만 부채로 계산됩니다.</p>
+
+              <div className="space-y-3">
+                <div className="bg-black/40 p-3 rounded text-sm">
+                  <p className="text-zinc-500 mb-1">예시 1: 연속 3개</p>
+                  <p className="font-mono">
+                    보유: <span className="text-red-400">-30, -31, -32</span>
+                    <span className="mx-2">→</span>
+                    부채: <span className="text-green-400">-30</span>만 계산
+                  </p>
+                </div>
+
+                <div className="bg-black/40 p-3 rounded text-sm">
+                  <p className="text-zinc-500 mb-1">예시 2: 연속 5개</p>
+                  <p className="font-mono">
+                    보유: <span className="text-red-400">-40, -41, -42, -43, -44</span>
+                    <span className="mx-2">→</span>
+                    부채: <span className="text-green-400">-40</span>만 계산
+                  </p>
+                </div>
+
+                <div className="bg-black/40 p-3 rounded text-sm">
+                  <p className="text-zinc-500 mb-1">예시 3: 두 그룹의 연속</p>
+                  <p className="font-mono">
+                    보유: <span className="text-red-400">-26, -27</span> + <span className="text-red-400">-35, -36, -37</span>
+                    <span className="mx-2">→</span>
+                    부채: <span className="text-green-400">-26</span> + <span className="text-green-400">-35</span> = <span className="text-yellow-400">-61</span>
+                  </p>
+                </div>
+
+                <div className="bg-black/40 p-3 rounded text-sm">
+                  <p className="text-zinc-500 mb-1">예시 4: 연속 없음</p>
+                  <p className="font-mono">
+                    보유: <span className="text-red-400">-28, -31, -45</span>
+                    <span className="mx-2">→</span>
+                    부채: <span className="text-red-400">-28 + -31 + -45</span> = <span className="text-red-400">-104</span> (전부 계산)
+                  </p>
+                </div>
+
+                <div className="bg-emerald-900/30 p-3 rounded text-sm border border-emerald-700/50">
+                  <p className="text-emerald-400 font-bold mb-1">💡 전략 팁</p>
+                  <p className="text-zinc-300">연속된 숫자를 모으면 큰 부채도 작은 부채로 바뀝니다! -48, -49, -50을 모으면 -48만 계산됩니다.</p>
+                </div>
               </div>
             </div>
           </div>

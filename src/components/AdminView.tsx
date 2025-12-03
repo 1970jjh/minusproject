@@ -204,16 +204,16 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                      <div className="flex flex-col items-center">
                         <div className="relative">
                             <div className="absolute -inset-4 bg-yellow-500/20 blur-xl rounded-full"></div>
-                            <div className="flex flex-col-reverse items-center -space-y-4 filter drop-shadow-2xl transition-all duration-300 transform hover:scale-110">
-                                {Array.from({ length: Math.min(5, Math.ceil(gameState.pot / 2)) }).map((_, i) => (
-                                    <Chip key={i} count={1} className="scale-150" />
+                            <div className="flex flex-wrap justify-center gap-1 max-w-[200px] filter drop-shadow-2xl transition-all duration-300 transform hover:scale-110">
+                                {Array.from({ length: gameState.pot }).map((_, i) => (
+                                    <Chip key={i} count={1} className="scale-125" />
                                 ))}
                             </div>
                         </div>
                         <div className="mt-8 bg-black/60 backdrop-blur-sm px-6 py-2 rounded-full border border-yellow-500/30 shadow-lg">
                            <span className="text-yellow-500 font-mono font-bold text-3xl">{gameState.pot}{CHIP_UNIT}</span>
                         </div>
-                        <span className="mt-2 text-[10px] text-emerald-400/60 uppercase font-bold tracking-[0.3em]">Current Pot</span>
+                        <span className="mt-2 text-[10px] text-emerald-400/60 font-bold tracking-[0.3em]">쌓인 자원</span>
                      </div>
 
                      {/* Current Card Area */}
@@ -224,7 +224,7 @@ const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, 
                              <GameCard value={gameState.currentCard!} className="w-48 h-72 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-4 border-white/10" />
                            </div>
                          </div>
-                         <span className="mt-6 text-[10px] text-red-400/60 uppercase font-bold tracking-[0.3em]">Auction Item</span>
+                         <span className="mt-6 text-[10px] text-red-400/60 font-bold tracking-[0.3em]">경매 프로젝트</span>
                      </div>
                   </div>
                )}

@@ -53,11 +53,11 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, isActive, isWinner = 
       {/* Player Header */}
       <div className={`p-3 rounded-t-xl flex items-center gap-3 border-b border-white/5 ${isActive ? 'bg-white/10' : 'bg-transparent'}`}>
          <div className={`w-8 h-8 rounded-full ${colorTheme.bg} flex items-center justify-center shadow-inner ring-1 ring-white/20`}>
-            <Users size={14} className="text-white" />
+            <span className="text-white font-bold text-sm">{player.colorIdx + 1}</span>
          </div>
          <div className="flex-1 min-w-0">
             <h3 className={`font-bold text-sm truncate ${isActive ? 'text-yellow-400' : 'text-zinc-300'}`}>
-                {player.name}
+                {player.colorIdx + 1}팀
             </h3>
          </div>
       </div>
@@ -66,7 +66,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, isActive, isWinner = 
       <div className="p-3 grid grid-cols-2 gap-2">
          {/* Resources (Chips) */}
          <div className="bg-black/40 rounded p-2 border border-white/5 flex flex-col items-center justify-center min-h-[4rem]">
-            <span className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1 font-bold">Resources</span>
+            <span className="text-[9px] text-zinc-500 tracking-wider mb-1 font-bold">현재 자원</span>
             <div className="flex items-center gap-2">
                <Chip count={1} className="scale-100" />
                <span className="font-mono font-bold text-2xl text-emerald-400">{player.chips}</span>
@@ -74,7 +74,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player, isActive, isWinner = 
          </div>
          {/* Score */}
          <div className="bg-black/40 rounded p-2 border border-white/5 flex flex-col items-center justify-center min-h-[4rem]">
-            <span className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1 font-bold">Est. Score</span>
+            <span className="text-[9px] text-zinc-500 tracking-wider mb-1 font-bold">현재 수익</span>
             <span className={`font-mono font-bold text-2xl ${player.score < 0 ? 'text-red-400' : 'text-blue-400'}`}>
                {player.score > 0 ? '+' : ''}{player.score}
             </span>

@@ -412,7 +412,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => { setViewState('MAIN'); setActiveTab('CREATE'); }}
+                onClick={() => { setViewState('MAIN'); setActiveTab('JOIN'); }}
                 className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-zinc-400 text-sm"
               >
                 취소
