@@ -2,9 +2,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GameState } from "../types";
 import { CHIP_UNIT } from "../constants";
 
-// Models to use
-const GEMINI_TEXT_MODEL = "gemini-2.5-pro-preview-05-06";  // For text analysis/reports (latest)
-const GEMINI_VISION_MODEL = "gemini-2.5-flash-preview-05-20";  // For image analysis
+// Models to use - stable versions that work reliably
+const GEMINI_TEXT_MODEL = "gemini-1.5-pro";  // For text analysis/reports
+const GEMINI_VISION_MODEL = "gemini-1.5-flash";  // For image analysis (multimodal)
 
 // Get Gemini API client with API key from environment variable
 const getClient = () => {

@@ -5,7 +5,7 @@ import Chip from './Chip';
 import { getStrategicAdvice } from '../services/geminiService';
 import { updateAiAdviceUsage, MAX_AI_ADVICE_PER_TEAM } from '../services/roomService';
 import { playVoiceEffect, initializeSpeech } from '../services/soundService';
-import { XCircle, CheckCircle, Home, Loader2, LogOut, Eye, Zap, Database, Activity, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { XCircle, CheckCircle, Home, Loader2, LogOut, Eye, Zap, Database, Activity, Sparkles, ChevronDown, ChevronUp, Trophy, Medal, Crown, TrendingUp } from 'lucide-react';
 
 interface PlayerViewProps {
   gameState: GameState;
@@ -134,6 +134,152 @@ const PlayerView: React.FC<PlayerViewProps> = ({ gameState, playerId, roomId, on
         </>
       ) : null
   );
+
+  // Find sequences helper
+  const findSequences = (cards: number[]): number[][] => {
+    if (cards.length === 0) return [];
+    const sorted = [...cards].sort((a, b) => a - b);
+    const sequences: number[][] = [];
+    let currentSeq: number[] = [sorted[0]];
+
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] === sorted[i - 1] + 1) {
+        currentSeq.push(sorted[i]);
+      } else {
+        if (currentSeq.length >= 2) sequences.push([...currentSeq]);
+        currentSeq = [sorted[i]];
+      }
+    }
+    if (currentSeq.length >= 2) sequences.push(currentSeq);
+    return sequences;
+  };
+
+  // -- Results/Finished State (Mobile) --
+  if (gameState.phase === GamePhase.FINISHED) {
+    const rankedPlayers = [...players].sort((a, b) => b.score - a.score);
+    const winner = rankedPlayers[0];
+
+    const getRankIcon = (rank: number) => {
+      switch (rank) {
+        case 0: return <Trophy className="text-yellow-400" size={20} />;
+        case 1: return <Medal className="text-gray-300" size={18} />;
+        case 2: return <Medal className="text-amber-600" size={16} />;
+        default: return <span className="text-zinc-500 font-bold text-sm">{rank + 1}</span>;
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col relative overflow-auto">
+        <div className="absolute inset-0 tech-grid pointer-events-none"></div>
+        <AdminControls />
+
+        {/* Header */}
+        <div className="relative z-10 p-4 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1 bg-yellow-500/20 rounded-full border border-yellow-500/30 mb-3">
+            <Crown size={14} className="text-yellow-400" />
+            <span className="text-yellow-400 text-xs font-bold">게임 종료</span>
+          </div>
+          <h1 className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            최종 결과
+          </h1>
+        </div>
+
+        {/* Winner Section */}
+        <div className="relative z-10 px-4 mb-4">
+          <div className="glass rounded-xl p-4 text-center bg-gradient-to-br from-yellow-900/20 to-transparent border border-yellow-500/20">
+            <Trophy size={32} className="text-yellow-400 mx-auto mb-2" />
+            <p className="text-[10px] text-yellow-400/80 uppercase tracking-wider mb-1">우승</p>
+            <h2 className="text-3xl font-black text-white mb-1">{winner.colorIdx + 1}팀</h2>
+            <p className="text-xs text-zinc-400 mb-3">{winner.members?.join(' • ') || winner.name}</p>
+            <div className="flex justify-center gap-4">
+              <div>
+                <p className="text-2xl font-black text-yellow-400">{winner.score}억</p>
+                <p className="text-[9px] text-zinc-500 uppercase">점수</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-emerald-400">{winner.chips}억</p>
+                <p className="text-[9px] text-zinc-500 uppercase">자원</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-red-400">{winner.cards.length}</p>
+                <p className="text-[9px] text-zinc-500 uppercase">프로젝트</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* All Team Rankings */}
+        <div className="relative z-10 px-4 flex-1">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp size={14} className="text-cyan-400" />
+            <h3 className="text-sm font-bold text-white">전체 팀 순위</h3>
+          </div>
+
+          <div className="space-y-3 pb-6">
+            {rankedPlayers.map((player, rank) => {
+              const sequences = findSequences(player.cards);
+              const isWinner = rank === 0;
+
+              return (
+                <div
+                  key={player.id}
+                  className={`glass rounded-xl p-3 ${isWinner ? 'border border-yellow-500/30 bg-yellow-900/10' : ''}`}
+                >
+                  {/* Team Header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      {getRankIcon(rank)}
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{player.colorIdx + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white text-sm">{player.colorIdx + 1}팀</h4>
+                      <p className="text-[10px] text-zinc-500 truncate">
+                        {player.members?.join(', ') || player.name}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-black ${player.score >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {player.score}억
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Team Details */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="glass-dark rounded-lg p-2">
+                      <p className="text-[8px] text-zinc-500 mb-0.5">보유 자원</p>
+                      <p className="text-sm font-bold text-emerald-400">{player.chips}억</p>
+                    </div>
+                    <div className="glass-dark rounded-lg p-2">
+                      <p className="text-[8px] text-zinc-500 mb-0.5">프로젝트</p>
+                      <p className="text-[10px] font-mono text-zinc-300 truncate">
+                        {player.cards.length > 0 ? player.cards.sort((a,b)=>a-b).join(', ') : '없음'}
+                      </p>
+                    </div>
+                    <div className="glass-dark rounded-lg p-2">
+                      <p className="text-[8px] text-zinc-500 mb-0.5">시퀀스</p>
+                      <p className="text-[10px] font-mono text-purple-400 truncate">
+                        {sequences.length > 0
+                          ? sequences.map(s => `[${s.join(',')}]`).join(' ')
+                          : '없음'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="relative z-10 p-4 text-center">
+          <p className="text-[9px] text-zinc-700">© Copyright Reserved by JJ Creative 교육연구소</p>
+        </div>
+      </div>
+    );
+  }
 
   // -- Lobby State --
   if (gameState.phase === GamePhase.LOBBY) {
