@@ -15,8 +15,10 @@ interface AdminViewProps {
 }
 
 const AdminView: React.FC<AdminViewProps> = ({ gameState, onStartGame, onReset, onViewPlayer, onExit }) => {
-  const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-  const winner = gameState.phase === GamePhase.FINISHED
+  const currentPlayer = gameState.players.length > 0
+    ? gameState.players[gameState.currentPlayerIndex]
+    : null;
+  const winner = gameState.phase === GamePhase.FINISHED && gameState.players.length > 0
     ? [...gameState.players].sort((a, b) => b.score - a.score)[0]
     : null;
 
