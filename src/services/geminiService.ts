@@ -7,14 +7,9 @@ const GEMINI_TEXT_MODEL = "gemini-2.0-flash";  // For text analysis/reports
 const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";  // For image generation with face preservation
 
 // Get Gemini API client with API key from environment variable
-const getClient = (): GoogleGenAI | null => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-        console.error("Gemini API key is not configured. Set VITE_GEMINI_API_KEY in .env");
-        return null;
-    }
-    return new GoogleGenAI({ apiKey });
-};
+// The real key stays on the server (api/gemini-proxy.js); the browser only talks to the proxy.
+const getClient = (): GoogleGenAI | null =>
+    new GoogleGenAI({ apiKey: 'server-proxy', httpOptions: { baseUrl: `${window.location.origin}/api/gemini-proxy` } });
 
 // Helper to check for billing errors
 const handleApiError = (error: any): string => {
